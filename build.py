@@ -160,6 +160,14 @@ def _is_widget_artifact(b):
     return bool(_DROP_RX.search(re.sub(r"<[^>]+>", "", text)))
 
 
+def footer_cols(lang):
+    cols = []
+    for heading, links in FOOTER[lang]:
+        lis = "".join(f'<li><a href="/{slug}/">{label}</a></li>' for slug, label in links)
+        cols.append(f"<div><h4>{heading}</h4><ul>{lis}</ul></div>")
+    return "".join(cols)
+
+
 # ── shared page shell ───────────────────────────────────────────────────────
 def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
     ui = UI[lang]
@@ -182,6 +190,7 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c0c0f'/%3E%3Ctext x='32' y='45' font-family='Arial' font-size='34' font-weight='700' fill='%23f0a33a' text-anchor='middle'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
 <link rel="preload" href="/assets/fonts/space-grotesk-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="/assets/css/site.css">
 {extra_head}
 </head>
@@ -196,9 +205,12 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
 </header>
 {body}
 <footer class="footer">
-  <p><strong>DerilBTC</strong>. {ui['tagline']}</p>
-  <p>{ui['footer_note']}</p>
-  <p><a href="{WA}" target="_blank" rel="noopener">WhatsApp: +237 673 259 112</a></p>
+  <div class="footer-grid">{footer_cols(lang)}</div>
+  <div class="footer-base">
+    <p><strong>DerilBTC</strong>. {ui['tagline']}</p>
+    <p>{ui['footer_note']}</p>
+    <p><a href="{WA}" target="_blank" rel="noopener">WhatsApp: +237 673 259 112</a> &nbsp;|&nbsp; <a href="mailto:info@derilbtc.com">info@derilbtc.com</a></p>
+  </div>
 </footer>
 <a class="sticky-cta" href="{WA}" target="_blank" rel="noopener">{ui['sticky']}</a>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
@@ -264,24 +276,48 @@ def page_html(slug, page, lang):
 # ── homepage ────────────────────────────────────────────────────────────────
 SERVICES = {
     "en": [
-        ("buy-bitcoin-cameroon", "Buy & sell Bitcoin", "Fair public rate, paid to MoMo or bank in minutes."),
-        ("buy-usdt-cameroon", "Buy & sell USDT", "Stable dollars for savings and payments."),
-        ("pay-china-suppliers", "Pay China suppliers", "Alipay, WeChat and 1688, settled same day."),
-        ("pay-school-fees-abroad", "Pay school fees abroad", "Canada, USA, France and beyond."),
-        ("book-flights", "Book flights", "International tickets paid from Cameroon."),
-        ("sell-gift-cards-cameroon", "Sell gift cards", "iTunes, Amazon, Steam and more, for cash."),
-        ("naira-to-cfa-cameroon", "Exchange Naira", "Naira to FCFA both ways, fast."),
-        ("momo-scams-cameroon", "Avoid MoMo scams", "Spot fraud before it costs you."),
+        ("buy-bitcoin-cameroon", "Buy & sell Bitcoin", "Fair public rate, paid to MoMo or bank in minutes.", "ti-currency-bitcoin"),
+        ("buy-usdt-cameroon", "Buy & sell USDT", "Stable dollars for savings and payments.", "ti-currency-dollar"),
+        ("pay-china-suppliers", "Pay China suppliers", "Alipay, WeChat and 1688, settled same day.", "ti-ship"),
+        ("pay-school-fees-abroad", "Pay school fees abroad", "Canada, USA, France and beyond.", "ti-school"),
+        ("book-flights", "Book flights", "International tickets paid from Cameroon.", "ti-plane-tilt"),
+        ("sell-gift-cards-cameroon", "Sell gift cards", "iTunes, Amazon, Steam and more, for cash.", "ti-gift"),
+        ("naira-to-cfa-cameroon", "Exchange Naira", "Naira to FCFA both ways, fast.", "ti-arrows-exchange"),
+        ("momo-scams-cameroon", "Avoid MoMo scams", "Spot fraud before it costs you.", "ti-shield-check"),
     ],
     "fr": [
-        ("acheter-bitcoin-cameroun", "Acheter et vendre du Bitcoin", "Taux public équitable, payé sur MoMo ou en banque en quelques minutes."),
-        ("acheter-usdt-cameroun", "Acheter et vendre de l'USDT", "Des dollars stables pour épargner et payer."),
-        ("payer-fournisseur-chine", "Payer un fournisseur en Chine", "Alipay, WeChat et 1688, réglés le jour même."),
-        ("frais-de-scolarite-etranger", "Payer les frais de scolarité", "Canada, USA, France et au-delà."),
-        ("reserver-vol", "Réserver un vol", "Billets internationaux payés depuis le Cameroun."),
-        ("vendre-cartes-cadeaux-cameroun", "Vendre des cartes-cadeaux", "iTunes, Amazon, Steam et plus, contre du cash."),
-        ("naira-en-fcfa-cameroun", "Échanger des Naira", "Naira vers FCFA dans les deux sens, rapidement."),
-        ("arnaques-momo-cameroun", "Éviter les arnaques MoMo", "Repérez la fraude avant qu'elle ne vous coûte."),
+        ("acheter-bitcoin-cameroun", "Acheter et vendre du Bitcoin", "Taux public équitable, payé sur MoMo ou en banque en quelques minutes.", "ti-currency-bitcoin"),
+        ("acheter-usdt-cameroun", "Acheter et vendre de l'USDT", "Des dollars stables pour épargner et payer.", "ti-currency-dollar"),
+        ("payer-fournisseur-chine", "Payer un fournisseur en Chine", "Alipay, WeChat et 1688, réglés le jour même.", "ti-ship"),
+        ("frais-de-scolarite-etranger", "Payer les frais de scolarité", "Canada, USA, France et au-delà.", "ti-school"),
+        ("reserver-vol", "Réserver un vol", "Billets internationaux payés depuis le Cameroun.", "ti-plane-tilt"),
+        ("vendre-cartes-cadeaux-cameroun", "Vendre des cartes-cadeaux", "iTunes, Amazon, Steam et plus, contre du cash.", "ti-gift"),
+        ("naira-en-fcfa-cameroun", "Échanger des Naira", "Naira vers FCFA dans les deux sens, rapidement.", "ti-arrows-exchange"),
+        ("arnaques-momo-cameroun", "Éviter les arnaques MoMo", "Repérez la fraude avant qu'elle ne vous coûte.", "ti-shield-check"),
+    ],
+}
+
+# Full footer directory: every real page, grouped, per language.
+FOOTER = {
+    "en": [
+        ("Trade", [("buy-bitcoin-cameroon", "Buy & sell Bitcoin"), ("buy-usdt-cameroon", "Buy & sell USDT"),
+                    ("naira-to-cfa-cameroon", "Naira to FCFA"), ("sell-gift-cards-cameroon", "Sell gift cards"),
+                    ("rates", "Today's rates")]),
+        ("Payments & travel", [("pay-china-suppliers", "Pay China suppliers"), ("pay-school-fees-abroad", "School fees abroad"),
+                                ("book-flights", "Book flights")]),
+        ("Learn & safety", [("safety", "Bitcoin scams guide"), ("momo-scams-cameroon", "MoMo scam guide"),
+                             ("faq", "FAQ"), ("free-bitcoin-mentorship-cameroon", "1-on-1 mentorship")]),
+        ("DerilBTC", [("about", "About us"), ("refer", "Refer & earn")]),
+    ],
+    "fr": [
+        ("Trader", [("acheter-bitcoin-cameroun", "Acheter du Bitcoin"), ("acheter-usdt-cameroun", "Acheter de l'USDT"),
+                     ("naira-en-fcfa-cameroun", "Naira en FCFA"), ("vendre-cartes-cadeaux-cameroun", "Vendre des cartes-cadeaux"),
+                     ("taux", "Taux du jour")]),
+        ("Paiements & voyage", [("payer-fournisseur-chine", "Payer un fournisseur en Chine"), ("frais-de-scolarite-etranger", "Frais de scolarité"),
+                                 ("reserver-vol", "Réserver un vol")]),
+        ("Guides & sécurité", [("securite", "Arnaques Bitcoin"), ("arnaques-momo-cameroun", "Arnaques MoMo"),
+                                ("faq-2", "FAQ"), ("mentorat-bitcoin-cameroun", "Mentorat 1-à-1")]),
+        ("DerilBTC", [("a-propos", "À propos"), ("referer", "Parrainer & gagner")]),
     ],
 }
 
@@ -328,11 +364,12 @@ def home_html(lang):
     ui = UI[lang]
     canonical = "/" if lang == "en" else "/derilbtc-accueil/"
     alt = "/derilbtc-accueil/" if lang == "en" else "/"
-    rotator_items = "".join(f'<span class="rot-item">{label}</span>' for _, label, _ in SERVICES[lang])
+    rotator_items = "".join(f'<span class="rot-item">{label}</span>' for _, label, _, _ in SERVICES[lang])
     cards = "".join(f"""
     <a class="svc" href="/{slug}/">
+      <span class="svc-ic"><i class="ti {icon}" aria-hidden="true"></i></span>
       <h3>{label}</h3><p>{blurb}</p><span class="svc-go" aria-hidden="true">&#8599;</span>
-    </a>""" for slug, label, blurb in SERVICES[lang])
+    </a>""" for slug, label, blurb, icon in SERVICES[lang])
     steps = "".join(f"""
     <div class="step" data-reveal><h3>{t}</h3><p>{p}</p></div>""" for t, p in c["steps"])
     title = ("Buy & Sell Bitcoin, USDT & More in Cameroon | DerilBTC" if lang == "en"
@@ -341,7 +378,7 @@ def home_html(lang):
 <main>
   <section class="hero">
     <div class="hero-inner">
-      <p class="ticker" id="ticker" aria-live="off">BTC <span id="t-btc">...</span> &nbsp;USDT <span id="t-usdt">...</span></p>
+      <p class="ticker" id="ticker" aria-live="off"><img src="/assets/img/btc.svg" alt="" width="15" height="15">BTC <span id="t-btc">...</span><img src="/assets/img/usdt.svg" alt="" width="15" height="15">USDT <span id="t-usdt">...</span></p>
       <h1><span class="line"><span>{c['h1a']}</span></span><span class="line"><span>{c['h1b']}</span></span></h1>
       <p class="hero-sub">{c['sub']}</p>
       <div class="rotator" aria-hidden="true"><span class="rot-label"></span>{rotator_items}</div>
@@ -396,6 +433,13 @@ def main():
         "That page does not exist.", "/404.html", "/",
         '<main><section class="page-hero"><h1>Page not found.</h1></section>'
         '<article class="prose"><p><a href="/">Back to the homepage</a></p></article></main>'))
+    # sitemap (production URLs; harmless in preview because preview is noindexed)
+    slugs = ["", "derilbtc-accueil/"] + sorted(
+        f"{s}/" for s in RAW if s not in ("home", "derilbtc-accueil"))
+    urls = "".join(f"<url><loc>https://derilbtc.com/{s}</loc></url>" for s in slugs)
+    write("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
+    write("robots.txt", "User-agent: *\nAllow: /\nSitemap: https://derilbtc.com/sitemap.xml\n" if not PREVIEW
+          else "User-agent: *\nDisallow: /\n")
     print(f"built {n} pages + 404 into dist/")
 
 if __name__ == "__main__":
