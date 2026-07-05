@@ -18,6 +18,9 @@ DIST = ROOT / "dist"
 RAW = json.load(open(ROOT / "content" / "raw_pages.json"))
 
 WA = "https://wa.me/237673259112"
+# The derilbtc-admin service (Railway). Set once deployed; empty = the
+# rates card and newsletter fall back to WhatsApp and LOGIN is hidden.
+ADMIN_URL = os.environ.get("ADMIN_URL", "")
 
 # EN slug -> FR slug (and the reverse is derived). Home pages handled apart.
 LANG_MAP = {
@@ -51,12 +54,10 @@ NAV = {
 UI = {
     "en": {"cta": "Trade on WhatsApp", "home": "/", "tagline": "Cameroon's trusted crypto desk since 2018.",
             "footer_note": "Rates quoted live on WhatsApp. MoMo, Orange Money and bank transfers.",
-            "switch": "FR", "menu_more": "More", "ticker_btc": "BTC", "ticker_usdt": "USDT",
-            "sticky": "Trade on WhatsApp"},
+            "switch": "FR", "login": "Login", "sticky": "Trade on WhatsApp"},
     "fr": {"cta": "Trader sur WhatsApp", "home": "/derilbtc-accueil/", "tagline": "Le bureau crypto de confiance du Cameroun depuis 2018.",
             "footer_note": "Taux communiqués en direct sur WhatsApp. MoMo, Orange Money et virements bancaires.",
-            "switch": "EN", "menu_more": "Plus", "ticker_btc": "BTC", "ticker_usdt": "USDT",
-            "sticky": "Trader sur WhatsApp"},
+            "switch": "EN", "login": "Login", "sticky": "Trader sur WhatsApp"},
 }
 
 # ── Elementor content extraction ────────────────────────────────────────────
@@ -200,6 +201,7 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
   <a class="nav-name" href="{ui['home']}"><img src="/assets/img/derilbtc-logo-light.png" alt="DerilBTC" height="34" width="145"></a>
   <nav class="nav-links" aria-label="Site">{nav_links}</nav>
   <div class="nav-side">
+    {f'<a class="nav-login" href="{ADMIN_URL}/admin" target="_blank" rel="noopener">{ui["login"]}</a>' if ADMIN_URL else ''}
     <a class="nav-lang" href="{alt_path}">{ui['switch']}</a>
     <a class="nav-cta" href="{WA}" target="_blank" rel="noopener">{ui['cta']}</a>
   </div>
@@ -365,6 +367,24 @@ FOOTER = {
     ],
 }
 
+RATES_COPY = {
+    "en": {"h": "We buy at premium rates.", "p": "These are our live buying rates, set by the desk and updated through the day. Lock yours on WhatsApp.",
+            "btc": "We buy Bitcoin", "usdt": "We buy USDT", "per": "XAF per USD", "lock": "Lock this rate",
+            "upd": "Updated"},
+    "fr": {"h": "Nous achetons à des taux premium.", "p": "Voici nos taux d'achat en direct, fixés par le bureau et mis à jour dans la journée. Verrouillez le vôtre sur WhatsApp.",
+            "btc": "Nous achetons le Bitcoin", "usdt": "Nous achetons l'USDT", "per": "XAF par USD", "lock": "Verrouiller ce taux",
+            "upd": "Mis à jour"},
+}
+
+NEWS_COPY = {
+    "en": {"h": "Get today's BTC rate every morning.", "p": "One short email with the day's rate. No spam, unsubscribe anytime.",
+            "ph": "Your email address", "btn": "Subscribe", "ok": "You're in. Watch your inbox tomorrow morning.",
+            "err": "That email doesn't look right. Try again."},
+    "fr": {"h": "Recevez le taux BTC du jour chaque matin.", "p": "Un court email avec le taux du jour. Pas de spam, désinscription à tout moment.",
+            "ph": "Votre adresse email", "btn": "S'abonner", "ok": "C'est fait. Surveillez votre boîte mail demain matin.",
+            "err": "Cet email ne semble pas correct. Réessayez."},
+}
+
 HOME_COPY = {
     "en": {
         "h1a": "Your money,", "h1b": "moving at the speed of trust.",
@@ -405,6 +425,8 @@ HOME_COPY = {
 
 def home_html(lang):
     c = HOME_COPY[lang]
+    rc = RATES_COPY[lang]
+    nc = NEWS_COPY[lang]
     ui = UI[lang]
     canonical = "/" if lang == "en" else "/derilbtc-accueil/"
     alt = "/derilbtc-accueil/" if lang == "en" else "/"
@@ -438,6 +460,22 @@ def home_html(lang):
     </div>
   </section>
 
+  <div class="coin-ticker" aria-hidden="true"><div class="coin-track" id="coin-track"></div></div>
+
+  <section class="our-rates" data-admin="{ADMIN_URL}">
+    <div class="rates-card">
+      <div>
+        <h2>{rc['h']}</h2>
+        <p class="rates-lead">{rc['p']}</p>
+        <a class="btn" href="{WA}?text={'Hi%21%20I%20want%20to%20lock%20today%27s%20rate.' if lang == 'en' else 'Bonjour!%20Je%20veux%20bloquer%20le%20taux%20du%20jour.'}" target="_blank" rel="noopener">{rc['lock']}</a>
+      </div>
+      <div class="rates-tiles">
+        <div class="rate-tile"><span>{rc['btc']}</span><b><em id="r-btc">...</em> XAF</b><small>{rc['per']}</small></div>
+        <div class="rate-tile"><span>{rc['usdt']}</span><b><em id="r-usdt">...</em> XAF</b><small>{rc['per']}</small></div>
+      </div>
+    </div>
+  </section>
+
   <section class="services">
     <h2>{c['services_h']}</h2>
     <div class="svc-grid">{cards}</div>
@@ -456,6 +494,17 @@ def home_html(lang):
   <section class="refer" data-reveal>
     <h2>{c['refer_h']}</h2>
     <p>{c['refer_p']} <a href="/{c['refer_link']}/">{c['refer_label']}</a></p>
+  </section>
+
+  <section class="newsletter">
+    <h2>{nc['h']}</h2>
+    <p>{nc['p']}</p>
+    <form id="nl-form" data-lang="{lang}" data-ok="{nc['ok']}" data-err="{nc['err']}">
+      <input type="email" name="email" required placeholder="{nc['ph']}" aria-label="{nc['ph']}">
+      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+      <button class="btn" type="submit">{nc['btn']}</button>
+    </form>
+    <p id="nl-msg" role="status"></p>
   </section>
 
   <section class="cta-band">

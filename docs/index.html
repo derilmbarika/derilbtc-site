@@ -24,6 +24,7 @@
   <a class="nav-name" href="/"><img src="/assets/img/derilbtc-logo-light.png" alt="DerilBTC" height="34" width="145"></a>
   <nav class="nav-links" aria-label="Site"><a href="/buy-bitcoin-cameroon/">Buy Bitcoin</a><a href="/buy-usdt-cameroon/">USDT</a><a href="/pay-china-suppliers/">China Payments</a><a href="/rates/">Rates</a><a href="/faq/">FAQ</a><a href="/about/">About</a></nav>
   <div class="nav-side">
+    
     <a class="nav-lang" href="/derilbtc-accueil/">FR</a>
     <a class="nav-cta" href="https://wa.me/237673259112" target="_blank" rel="noopener">Trade on WhatsApp</a>
   </div>
@@ -41,6 +42,22 @@
       </div>
       <div class="hero-media">
         <img src="/assets/img/derilbtc-hero.jpg" alt="DerilBTC: Bitcoin and money services in Cameroon" width="1400" height="781" fetchpriority="high">
+      </div>
+    </div>
+  </section>
+
+  <div class="coin-ticker" aria-hidden="true"><div class="coin-track" id="coin-track"></div></div>
+
+  <section class="our-rates" data-admin="">
+    <div class="rates-card">
+      <div>
+        <h2>We buy at premium rates.</h2>
+        <p class="rates-lead">These are our live buying rates, set by the desk and updated through the day. Lock yours on WhatsApp.</p>
+        <a class="btn" href="https://wa.me/237673259112?text=Hi%21%20I%20want%20to%20lock%20today%27s%20rate." target="_blank" rel="noopener">Lock this rate</a>
+      </div>
+      <div class="rates-tiles">
+        <div class="rate-tile"><span>We buy Bitcoin</span><b><em id="r-btc">...</em> XAF</b><small>XAF per USD</small></div>
+        <div class="rate-tile"><span>We buy USDT</span><b><em id="r-usdt">...</em> XAF</b><small>XAF per USD</small></div>
       </div>
     </div>
   </section>
@@ -122,6 +139,17 @@
   <section class="refer" data-reveal>
     <h2>Invite a friend. You both get cash.</h2>
     <p>Share your link, they trade, you both earn a bonus. <a href="/refer/">How referrals work</a></p>
+  </section>
+
+  <section class="newsletter">
+    <h2>Get today's BTC rate every morning.</h2>
+    <p>One short email with the day's rate. No spam, unsubscribe anytime.</p>
+    <form id="nl-form" data-lang="en" data-ok="You're in. Watch your inbox tomorrow morning." data-err="That email doesn't look right. Try again.">
+      <input type="email" name="email" required placeholder="Your email address" aria-label="Your email address">
+      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+      <button class="btn" type="submit">Subscribe</button>
+    </form>
+    <p id="nl-msg" role="status"></p>
   </section>
 
   <section class="cta-band">
