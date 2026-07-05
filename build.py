@@ -188,7 +188,8 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
 <meta property="og:title" content="{H.escape(title, quote=True)}">
 <meta property="og:description" content="{H.escape(desc, quote=True)}">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c0c0f'/%3E%3Ctext x='32' y='45' font-family='Arial' font-size='34' font-weight='700' fill='%23f0a33a' text-anchor='middle'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="/assets/img/derilbtc-icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/img/derilbtc-icon-512.png">
 <link rel="preload" href="/assets/fonts/space-grotesk-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="/assets/css/site.css">
@@ -196,7 +197,7 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
 </head>
 <body>
 <header class="nav">
-  <a class="nav-name" href="{ui['home']}">Deril<span>BTC</span></a>
+  <a class="nav-name" href="{ui['home']}"><img src="/assets/img/derilbtc-logo-light.png" alt="DerilBTC" height="34" width="145"></a>
   <nav class="nav-links" aria-label="Site">{nav_links}</nav>
   <div class="nav-side">
     <a class="nav-lang" href="{alt_path}">{ui['switch']}</a>
@@ -261,12 +262,25 @@ def page_html(slug, page, lang):
     desc = first_paragraph(blocks)
     alt_slug = LANG_MAP.get(slug) or FR_TO_EN.get(slug)
     alt_path = f"/{alt_slug}/" if alt_slug else ("/" if lang == "fr" else "/derilbtc-accueil/")
+    hero_img = PAGE_HERO.get(slug) or PAGE_HERO.get(FR_TO_EN.get(slug, ""), "derilbtc-hero.jpg")
+    hero_style = f' style="background-image: linear-gradient(rgba(10,19,48,.82), rgba(10,19,48,.94)), url(/assets/img/{hero_img})"'
+    founder = ""
+    if slug in ("about", "a-propos"):
+        cap = ("The desk, then and now: 2018 to today." if lang == "en"
+               else "Le bureau, hier et aujourd'hui : de 2018 à maintenant.")
+        founder = f"""
+    <div class="founder-strip">
+      <img src="/assets/img/deril-2018.jpg" alt="DerilBTC founder in 2018" loading="lazy" width="700" height="933">
+      <img src="/assets/img/deril-today.jpg" alt="DerilBTC founder today" loading="lazy" width="700" height="933">
+    </div>
+    <p class="founder-cap">{cap}</p>"""
     body = f"""
 <main>
-  <section class="page-hero">
+  <section class="page-hero page-hero-img"{hero_style}>
     <h1>{h1}</h1>
   </section>
   <article class="prose" data-reveal>
+    {founder}
     {render_blocks(blocks, lang)}
   </article>
 </main>"""
@@ -295,6 +309,36 @@ SERVICES = {
         ("naira-en-fcfa-cameroun", "Échanger des Naira", "Naira vers FCFA dans les deux sens, rapidement.", "ti-arrows-exchange"),
         ("arnaques-momo-cameroun", "Éviter les arnaques MoMo", "Repérez la fraude avant qu'elle ne vous coûte.", "ti-shield-check"),
     ],
+}
+
+# Per-page header art (real brand images pulled from the WP media library,
+# self-hosted). FR pages inherit their EN twin's image via FR_TO_EN.
+PAGE_HERO = {
+    "buy-bitcoin-cameroon": "derilbtc-bitcoin-instant.jpg",
+    "buy-usdt-cameroon": "derilbtc-usdt-instant.jpg",
+    "pay-china-suppliers": "derilbtc-rmb.jpg",
+    "pay-school-fees-abroad": "derilbtc-fees-flags.jpg",
+    "book-flights": "derilbtc-flights-plane.jpg",
+    "rates": "derilbtc-buysell.jpg",
+    "safety": "derilbtc-safety.jpg",
+    "about": "derilbtc-about.jpg",
+    "faq": "derilbtc-hero.jpg",
+    "sell-gift-cards-cameroon": "derilbtc-giftcards.jpg",
+    "naira-to-cfa-cameroon": "derilbtc-naira.jpg",
+    "momo-scams-cameroon": "derilbtc-momo-scams.jpg",
+    "refer": "derilbtc-hero.jpg",
+    "free-bitcoin-mentorship-cameroon": "derilbtc-buysell.jpg",
+}
+
+CARD_IMG = {
+    "buy-bitcoin-cameroon": "deril-btc.jpg", "acheter-bitcoin-cameroun": "deril-btc.jpg",
+    "buy-usdt-cameroon": "deril-usdt.jpg", "acheter-usdt-cameroun": "deril-usdt.jpg",
+    "pay-china-suppliers": "deril-china.jpg", "payer-fournisseur-chine": "deril-china.jpg",
+    "pay-school-fees-abroad": "deril-fees.jpg", "frais-de-scolarite-etranger": "deril-fees.jpg",
+    "book-flights": "deril-flights.jpg", "reserver-vol": "deril-flights.jpg",
+    "sell-gift-cards-cameroon": "deril-gift.jpg", "vendre-cartes-cadeaux-cameroun": "deril-gift.jpg",
+    "naira-to-cfa-cameroon": "deril-naira.jpg", "naira-en-fcfa-cameroun": "deril-naira.jpg",
+    "momo-scams-cameroon": "deril-scam.jpg", "arnaques-momo-cameroun": "deril-scam.jpg",
 }
 
 # Full footer directory: every real page, grouped, per language.
@@ -367,8 +411,11 @@ def home_html(lang):
     rotator_items = "".join(f'<span class="rot-item">{label}</span>' for _, label, _, _ in SERVICES[lang])
     cards = "".join(f"""
     <a class="svc" href="/{slug}/">
-      <span class="svc-ic"><i class="ti {icon}" aria-hidden="true"></i></span>
-      <h3>{label}</h3><p>{blurb}</p><span class="svc-go" aria-hidden="true">&#8599;</span>
+      <img class="svc-img" src="/assets/img/{CARD_IMG[slug]}" alt="" loading="lazy" width="800" height="447">
+      <div class="svc-body">
+        <span class="svc-ic"><i class="ti {icon}" aria-hidden="true"></i></span>
+        <h3>{label}</h3><p>{blurb}</p><span class="svc-go" aria-hidden="true">&#8599;</span>
+      </div>
     </a>""" for slug, label, blurb, icon in SERVICES[lang])
     steps = "".join(f"""
     <div class="step" data-reveal><h3>{t}</h3><p>{p}</p></div>""" for t, p in c["steps"])
@@ -377,12 +424,17 @@ def home_html(lang):
     body = f"""
 <main>
   <section class="hero">
-    <div class="hero-inner">
-      <p class="ticker" id="ticker" aria-live="off"><img src="/assets/img/btc.svg" alt="" width="15" height="15">BTC <span id="t-btc">...</span><img src="/assets/img/usdt.svg" alt="" width="15" height="15">USDT <span id="t-usdt">...</span></p>
-      <h1><span class="line"><span>{c['h1a']}</span></span><span class="line"><span>{c['h1b']}</span></span></h1>
-      <p class="hero-sub">{c['sub']}</p>
-      <div class="rotator" aria-hidden="true"><span class="rot-label"></span>{rotator_items}</div>
-      <a class="btn btn-lg" href="{WA}" target="_blank" rel="noopener">{c['cta_btn']}</a>
+    <div class="hero-inner hero-split">
+      <div>
+        <p class="ticker" id="ticker" aria-live="off"><img src="/assets/img/btc.svg" alt="" width="15" height="15">BTC <span id="t-btc">...</span><img src="/assets/img/usdt.svg" alt="" width="15" height="15">USDT <span id="t-usdt">...</span></p>
+        <h1><span class="line"><span>{c['h1a']}</span></span><span class="line"><span>{c['h1b']}</span></span></h1>
+        <p class="hero-sub">{c['sub']}</p>
+        <div class="rotator" aria-hidden="true"><span class="rot-label"></span>{rotator_items}</div>
+        <a class="btn btn-lg" href="{WA}" target="_blank" rel="noopener">{c['cta_btn']}</a>
+      </div>
+      <div class="hero-media">
+        <img src="/assets/img/derilbtc-hero.jpg" alt="DerilBTC: Bitcoin and money services in Cameroon" width="1400" height="781" fetchpriority="high">
+      </div>
     </div>
   </section>
 
