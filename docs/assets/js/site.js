@@ -124,29 +124,50 @@
     }, 2600);
   }
 
-  // scroll stop: pin the steps section while the three steps land in turn
-  var stepsWrap = document.querySelector(".steps-wrap");
-  if (stepsWrap && window.innerWidth > 960) {
-    var steps = gsap.utils.toArray(".steps-wrap .step");
-    gsap.set(steps, { opacity: 0, y: 46 });
-    var tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: stepsWrap,
-        start: "top top",
-        end: "+=" + (steps.length * 320),
-        pin: true,
-        scrub: 0.6,
-      },
-    });
-    steps.forEach(function (s) {
-      tl.to(s, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" });
-    });
-  } else if (stepsWrap) {
-    ScrollTrigger.batch(".steps-wrap .step", {
-      start: "top 92%", once: true,
-      onEnter: function (b) { gsap.from(b, { opacity: 0, y: 24, duration: 0.6, stagger: 0.08 }); },
+  // WWD "scroll stop": pin the What-we-do stage while the 8 numbered panels
+  // cross-fade in sequence, with the progress bar tracking (1-1 from the
+  // original site's pinned wwd-stage).
+  var stage = document.querySelector(".wwd-stage");
+  if (stage) {
+    var mm = gsap.matchMedia();
+    mm.add("(min-width: 961px)", function () {
+      var panels = gsap.utils.toArray(".wwd-panel");
+      var bar = document.getElementById("wwd-bar");
+      var per = 620; // scroll px per panel
+      var tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: stage,
+          start: "top top",
+          end: "+=" + (panels.length * per),
+          pin: true,
+          scrub: 0.5,
+        },
+      });
+      panels.forEach(function (p, i) {
+        if (i === 0) return;
+        tl.to(panels[i - 1], { opacity: 0, y: -26, duration: 0.45, ease: "power2.in", pointerEvents: "none" }, i)
+          .fromTo(p, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", pointerEvents: "auto" }, i + 0.4);
+      });
+      if (bar) tl.to(bar, { width: "100%", ease: "none", duration: panels.length }, 0);
     });
   }
+
+  // steps: simple staggered reveal
+  ScrollTrigger.batch(".steps-wrap .step", {
+    start: "top 92%", once: true,
+    onEnter: function (b) { gsap.from(b, { opacity: 0, y: 24, duration: 0.6, stagger: 0.08 }); },
+  });
+
+  // stats: count-up when the band enters
+  gsap.utils.toArray(".stat b[data-count]").forEach(function (el) {
+    var target = parseInt(el.dataset.count, 10);
+    var o = { v: 0 };
+    gsap.to(o, {
+      v: target, duration: 1.6, ease: "power2.out",
+      scrollTrigger: { trigger: el, start: "top 90%", once: true },
+      onUpdate: function () { el.textContent = Math.round(o.v).toLocaleString("en-US"); },
+    });
+  });
 
   gsap.utils.toArray("[data-reveal], .services h2, .cta-band h2, .our-rates .rates-card, .newsletter").forEach(function (el) {
     gsap.from(el, {

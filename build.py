@@ -16,6 +16,8 @@ PREVIEW = os.environ.get("PREVIEW") == "1"
 ROOT = Path(__file__).parent
 DIST = ROOT / "dist"
 RAW = json.load(open(ROOT / "content" / "raw_pages.json"))
+# 1-1 structure extracted from the original homepage (panels, hero, CTAs).
+HOME_STRUCT = json.load(open(ROOT / "content" / "home_structure.json"))
 
 WA = "https://wa.me/237673259112"
 # The derilbtc-admin service (Railway). Set once deployed; empty = the
@@ -79,6 +81,14 @@ class Extract(HTMLParser):
         if tag in self.KEEP:
             self._stack.append(tag)
             self._buf = []
+        if tag == "img" and not self._stack:
+            # inline content image (e.g. the mentorship founder photos):
+            # keep it, remapped to the self-hosted copy.
+            src = a.get("href") or a.get("src") or ""
+            local = {"deril-2018-rotated.jpg": "deril-2018.jpg",
+                     "deril-today-rotated.jpg": "deril-today.jpg"}.get(src.split("/")[-1], src.split("/")[-1])
+            if src:
+                self.blocks.append(["img", (f"/assets/img/{local}", a.get("alt", ""))])
         if tag == "a":
             href = a.get("href", "") or ""
             cls = a.get("class", "") or ""
@@ -243,6 +253,9 @@ def render_blocks(blocks, lang):
         elif kind == "btn":
             href, label = b[1]
             out.append(f'<a class="btn" href="{H.escape(href, quote=True)}" target="_blank" rel="noopener">{label}</a>')
+        elif kind == "img":
+            src, alt = b[1]
+            out.append(f'<figure class="prose-img"><img src="{H.escape(src, quote=True)}" alt="{H.escape(alt, quote=True)}" loading="lazy"></figure>')
     return "\n".join(out)
 
 
@@ -266,23 +279,12 @@ def page_html(slug, page, lang):
     alt_path = f"/{alt_slug}/" if alt_slug else ("/" if lang == "fr" else "/derilbtc-accueil/")
     hero_img = PAGE_HERO.get(slug) or PAGE_HERO.get(FR_TO_EN.get(slug, ""), "derilbtc-hero.jpg")
     hero_style = f' style="background-image: linear-gradient(rgba(10,19,48,.82), rgba(10,19,48,.94)), url(/assets/img/{hero_img})"'
-    founder = ""
-    if slug in ("about", "a-propos"):
-        cap = ("The desk, then and now: 2018 to today." if lang == "en"
-               else "Le bureau, hier et aujourd'hui : de 2018 à maintenant.")
-        founder = f"""
-    <div class="founder-strip">
-      <img src="/assets/img/deril-2018.jpg" alt="DerilBTC founder in 2018" loading="lazy" width="700" height="933">
-      <img src="/assets/img/deril-today.jpg" alt="DerilBTC founder today" loading="lazy" width="700" height="933">
-    </div>
-    <p class="founder-cap">{cap}</p>"""
     body = f"""
 <main>
   <section class="page-hero page-hero-img"{hero_style}>
     <h1>{h1}</h1>
   </section>
   <article class="prose" data-reveal>
-    {founder}
     {render_blocks(blocks, lang)}
   </article>
 </main>"""
@@ -367,6 +369,32 @@ FOOTER = {
     ],
 }
 
+# WWD panels: EN comes 1-1 from the original page (home_structure.json);
+# FR is a faithful translation (the original FR home was untranslated English).
+WWD_FR = [
+    {"kick": "Bitcoin", "h2": "Acheter et vendre du Bitcoin", "p": "Un taux public équitable, payé sur votre MoMo ou en banque en quelques minutes. Le bureau de confiance du Cameroun depuis 2018.", "cta_label": "Commencer à trader →", "cta_href": "/acheter-bitcoin-cameroun/", "img": "deril-btc.jpg"},
+    {"kick": "Stablecoin", "h2": "Acheter et vendre de l'USDT", "p": "Des dollars qui ne bougent pas. Achetez ou vendez du Tether au taux du jour, réglé directement sur le mobile money.", "cta_label": "Acheter de l'USDT →", "cta_href": "/acheter-usdt-cameroun/", "img": "deril-usdt.jpg"},
+    {"kick": "Imports", "h2": "Payer les fournisseurs en Chine", "p": "Payez les usines et les fournisseurs 1688/Alibaba en RMB, sans les délais bancaires. Votre marchandise part à temps.", "cta_label": "Payer un fournisseur →", "cta_href": "/payer-fournisseur-chine/", "img": "deril-china.jpg"},
+    {"kick": "Éducation", "h2": "Payer les frais de scolarité à l'étranger", "p": "Frais de scolarité vers les USA, le Canada, le Royaume-Uni, la Chine et au-delà, payés correctement et à temps.", "cta_label": "Payer la scolarité →", "cta_href": "/frais-de-scolarite-etranger/", "img": "deril-fees.jpg"},
+    {"kick": "Voyage", "h2": "Réserver des vols", "p": "Dites-nous où et quand. Nous trouvons et émettons le billet, vous payez en XAF. Pas besoin de carte.", "cta_label": "Réserver un vol →", "cta_href": "/reserver-vol/", "img": "deril-flights.jpg"},
+    {"kick": "Cartes-cadeaux", "h2": "Vendre des cartes-cadeaux", "p": "Transformez iTunes, Amazon, Steam et plus en cash instantané sur MoMo, à des taux honnêtes.", "cta_label": "Vendre maintenant →", "cta_href": "/vendre-cartes-cadeaux-cameroun/", "img": "deril-gift.jpg"},
+    {"kick": "Devises", "h2": "Échanger des Naira", "p": "Convertissez le Naira nigérian en CFA, USD ou USDT instantanément, avec un taux en direct que vous voyez.", "cta_label": "Échanger maintenant →", "cta_href": "/naira-en-fcfa-cameroun/", "img": "deril-naira.jpg"},
+    {"kick": "Sécurité", "h2": "Éviter les arnaques MoMo", "p": "Connaissez les pièges avant qu'ils ne vous atteignent. Un guide gratuit pour trader et envoyer de l'argent en sécurité.", "cta_label": "Rester protégé →", "cta_href": "/arnaques-momo-cameroun/", "img": "deril-scam.jpg"},
+]
+
+STATS = {
+    "en": {"eyebrow": "Why us", "h2": "A desk Cameroon already trusts.", "tiles": [
+        {"b": "2018", "count": None, "s": "Trading since"},
+        {"b": "300", "count": 300, "s": "clients on WhatsApp"},
+        {"b": "Minutes", "count": None, "s": "not days, to get paid"},
+        {"b": "8", "count": 8, "s": "services, one trusted desk"}]},
+    "fr": {"eyebrow": "Pourquoi nous", "h2": "Un bureau auquel le Cameroun fait déjà confiance.", "tiles": [
+        {"b": "2018", "count": None, "s": "En activité depuis"},
+        {"b": "300", "count": 300, "s": "clients sur WhatsApp"},
+        {"b": "Minutes", "count": None, "s": "pas des jours, pour être payé"},
+        {"b": "8", "count": 8, "s": "services, un seul bureau"}]},
+}
+
 RATES_COPY = {
     "en": {"h": "We buy at premium rates.", "p": "These are our live buying rates, set by the desk and updated through the day. Lock yours on WhatsApp.",
             "btc": "We buy Bitcoin", "usdt": "We buy USDT", "per": "XAF per USD", "lock": "Lock this rate",
@@ -396,6 +424,7 @@ HOME_COPY = {
         "steps": [("Message us", "Say what you want to trade on WhatsApp."),
                    ("Lock your rate", "We quote a fair public rate and confirm."),
                    ("Get paid", "MoMo, Orange Money or bank, usually in minutes.")],
+        "explore": "Explore services ↓",
         "cta_h": "Ready to move your money the smart way?",
         "cta_btn": "Trade on WhatsApp",
         "refer_h": "Invite a friend. You both get cash.",
@@ -413,6 +442,7 @@ HOME_COPY = {
         "steps": [("Écrivez-nous", "Dites ce que vous voulez trader sur WhatsApp."),
                    ("Bloquez votre taux", "Nous cotons un taux public équitable et confirmons."),
                    ("Recevez l'argent", "MoMo, Orange Money ou banque, souvent en quelques minutes.")],
+        "explore": "Découvrir les services ↓",
         "cta_h": "Prêt à déplacer votre argent intelligemment ?",
         "cta_btn": "Trader sur WhatsApp",
         "refer_h": "Invitez un ami. Vous gagnez tous les deux.",
@@ -423,6 +453,21 @@ HOME_COPY = {
 }
 
 
+def wwd_panel(i, total, kick, h2, p, cta_href, cta_label, img, external=False):
+    tgt = ' target="_blank" rel="noopener"' if external else ""
+    return f"""
+      <article class="wwd-panel" data-panel="{i}">
+        <div class="wwd-content">
+          <div class="wwd-num"><b>{i:02d}</b> / {total:02d}</div>
+          <span class="wwd-kick">{kick}</span>
+          <h3>{h2}</h3>
+          <p>{p}</p>
+          <a class="btn" href="{cta_href}"{tgt}>{cta_label}</a>
+        </div>
+        <div class="wwd-media"><img src="/assets/img/{img}" alt="" loading="{'eager' if i == 1 else 'lazy'}" width="800" height="447"></div>
+      </article>"""
+
+
 def home_html(lang):
     c = HOME_COPY[lang]
     rc = RATES_COPY[lang]
@@ -431,14 +476,25 @@ def home_html(lang):
     canonical = "/" if lang == "en" else "/derilbtc-accueil/"
     alt = "/derilbtc-accueil/" if lang == "en" else "/"
     rotator_items = "".join(f'<span class="rot-item">{label}</span>' for _, label, _, _ in SERVICES[lang])
-    cards = "".join(f"""
-    <a class="svc" href="/{slug}/">
-      <img class="svc-img" src="/assets/img/{CARD_IMG[slug]}" alt="" loading="lazy" width="800" height="447">
-      <div class="svc-body">
-        <span class="svc-ic"><i class="ti {icon}" aria-hidden="true"></i></span>
-        <h3>{label}</h3><p>{blurb}</p><span class="svc-go" aria-hidden="true">&#8599;</span>
-      </div>
-    </a>""" for slug, label, blurb, icon in SERVICES[lang])
+
+    # WWD pinned stage: EN 1-1 from the original page, FR faithful translation.
+    if lang == "en":
+        panels_src = [{"kick": p["kick"], "h2": p["h2"], "p": p["p"],
+                        "cta_href": p["cta_href"], "cta_label": p["cta_label"], "img": p["img"]}
+                       for p in HOME_STRUCT["panels"]]
+    else:
+        panels_src = WWD_FR
+    wwd_panels = "".join(
+        wwd_panel(i + 1, len(panels_src), s["kick"], s["h2"], s["p"], s["cta_href"], s["cta_label"], s["img"])
+        for i, s in enumerate(panels_src))
+
+    hero_sub = (scrub(H.unescape(HOME_STRUCT.get("hero_p", c["sub"]))) if lang == "en"
+                else "Achetez et vendez Bitcoin et USDT, payez fournisseurs et frais de scolarité à l'étranger, réservez des vols, vendez des cartes-cadeaux et échangez des Naira. Tout au Cameroun, tout payé sur MoMo en quelques minutes.")
+
+    stat_tiles = "".join(
+        f"""<div class="stat"><b{f' data-count="{t["count"]}"' if t["count"] else ''}>{'0' if t["count"] else t["b"]}</b><span>{t["s"]}</span></div>"""
+        for t in STATS[lang]["tiles"])
+
     steps = "".join(f"""
     <div class="step" data-reveal><h3>{t}</h3><p>{p}</p></div>""" for t, p in c["steps"])
     title = ("Buy & Sell Bitcoin, USDT & More in Cameroon | DerilBTC" if lang == "en"
@@ -450,17 +506,29 @@ def home_html(lang):
       <div>
         <p class="ticker" id="ticker" aria-live="off"><img src="/assets/img/btc.svg" alt="" width="15" height="15">BTC <span id="t-btc">...</span><img src="/assets/img/usdt.svg" alt="" width="15" height="15">USDT <span id="t-usdt">...</span></p>
         <h1><span class="line"><span>{c['h1a']}</span></span><span class="line"><span>{c['h1b']}</span></span></h1>
-        <p class="hero-sub">{c['sub']}</p>
+        <p class="hero-sub">{hero_sub}</p>
         <div class="rotator" aria-hidden="true"><span class="rot-label"></span>{rotator_items}</div>
-        <a class="btn btn-lg" href="{WA}" target="_blank" rel="noopener">{c['cta_btn']}</a>
+        <div class="hero-ctas">
+          <a class="btn btn-lg" href="{WA}?text=Hi%20DerilBTC%21%20I%20want%20to%20trade." target="_blank" rel="noopener">{c['cta_btn']}</a>
+          <a class="btn-ghost" href="#what-we-do">{c['explore']}</a>
+        </div>
       </div>
       <div class="hero-media">
         <img src="/assets/img/derilbtc-hero.jpg" alt="DerilBTC: Bitcoin and money services in Cameroon" width="1400" height="781" fetchpriority="high">
       </div>
     </div>
+    <div class="scrollcue" aria-hidden="true"><span class="mouse"></span></div>
   </section>
 
   <div class="coin-ticker" aria-hidden="true"><div class="coin-track" id="coin-track"></div></div>
+
+  <section class="wwd" id="what-we-do">
+    <div class="wwd-stage">
+      <div class="wwd-head"><h2>{c['services_h']}</h2></div>
+      {wwd_panels}
+      <div class="wwd-prog"><i id="wwd-bar"></i></div>
+    </div>
+  </section>
 
   <section class="our-rates" data-admin="{ADMIN_URL}">
     <div class="rates-card">
@@ -476,14 +544,9 @@ def home_html(lang):
     </div>
   </section>
 
-  <section class="services">
-    <h2>{c['services_h']}</h2>
-    <div class="svc-grid">{cards}</div>
-  </section>
-
-  <section class="trust" data-reveal>
-    <h2>{c['trust_h']}</h2>
-    <p>{c['trust_p']}</p>
+  <section class="stats">
+    <h2>{STATS[lang]['h2']}</h2>
+    <div class="stats-grid">{stat_tiles}</div>
   </section>
 
   <section class="steps-wrap">

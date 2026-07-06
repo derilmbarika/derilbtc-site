@@ -332,3 +332,65 @@ main section h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); letter-spacing: -0.02em
   .rates-card { grid-template-columns: 1fr; }
   .newsletter form { flex-direction: column; }
 }
+
+/* ── scroll cue (animated mouse, from the original) ── */
+.scrollcue { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 1; }
+.scrollcue .mouse {
+  display: block; width: 24px; height: 38px; border: 2px solid var(--muted);
+  border-radius: 14px; position: relative; opacity: .75;
+}
+.scrollcue .mouse::after {
+  content: ""; position: absolute; top: 7px; left: 50%; transform: translateX(-50%);
+  width: 3px; height: 7px; border-radius: 2px; background: var(--gold);
+  animation: cuewheel 1.6s infinite;
+}
+@keyframes cuewheel {
+  0% { opacity: 0; transform: translate(-50%, 0); }
+  30% { opacity: 1; } 60% { opacity: 1; transform: translate(-50%, 9px); }
+  100% { opacity: 0; transform: translate(-50%, 12px); }
+}
+@media (prefers-reduced-motion: reduce) { .scrollcue .mouse::after { animation: none; } }
+
+/* ── hero ctas ── */
+.hero-ctas { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 34px; }
+.hero-ctas .btn-lg { margin-top: 0; }
+.btn-ghost { color: var(--blue); font-size: 15.5px; font-weight: 500; border-bottom: 1px solid transparent; transition: border-color .2s; }
+.btn-ghost:hover { border-color: var(--blue); }
+
+/* ── WWD pinned stage (1-1 from the original) ── */
+.wwd { position: relative; }
+.wwd-stage { position: relative; min-height: 100svh; display: grid; align-content: center; overflow: hidden; padding: 80px clamp(18px, 4vw, 44px) 60px; }
+.wwd-head h2 { margin-bottom: clamp(22px, 3vw, 38px); }
+.wwd-head, .wwd-panel, .wwd-prog { max-width: 1200px; margin-left: auto; margin-right: auto; width: 100%; }
+.wwd-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+.wwd-panel + .wwd-panel { position: absolute; inset: 0; padding: inherit; opacity: 0; pointer-events: none; }
+.wwd-stage.js-pin .wwd-panel { grid-area: panel; }
+.wwd-num { color: var(--blue); font-weight: 700; font-size: 15px; letter-spacing: .06em; margin-bottom: 10px; }
+.wwd-num b { color: var(--gold); font-size: 22px; }
+.wwd-kick { display: inline-block; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .14em; margin-bottom: 12px; }
+.wwd-content h3 { font-size: clamp(1.7rem, 3.4vw, 2.7rem); letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 14px; }
+.wwd-content p { color: var(--muted); max-width: 46ch; margin-bottom: 24px; }
+.wwd-media img { display: block; width: 100%; height: auto; border-radius: var(--r-card); border: 1px solid var(--line); box-shadow: 0 26px 70px rgba(3, 8, 30, .6); }
+.wwd-prog { height: 3px; background: rgba(148, 176, 255, .14); border-radius: 3px; margin-top: clamp(26px, 3vw, 40px); overflow: hidden; }
+.wwd-prog i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--gold)); }
+
+/* mobile: panels stack, no pin */
+@media (max-width: 960px) {
+  .wwd-stage { min-height: 0; }
+  .wwd-panel { grid-template-columns: 1fr; gap: 18px; margin-bottom: 46px; }
+  .wwd-panel + .wwd-panel { position: static; opacity: 1; pointer-events: auto; }
+  .wwd-prog { display: none; }
+}
+
+/* ── stats band (count-up tiles) ── */
+.stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-2); padding: clamp(56px, 8vw, 96px) clamp(18px, 4vw, 44px); }
+.stats h2 { max-width: 1200px; margin: 0 auto clamp(24px, 3vw, 38px); }
+.stats-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.stat { background: rgba(10, 19, 48, .55); border: 1px solid var(--line); border-radius: 18px; padding: 28px 24px; backdrop-filter: blur(8px); }
+.stat b { display: block; font-size: clamp(30px, 3.6vw, 48px); font-weight: 700; letter-spacing: -0.03em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 14px; }
+@media (max-width: 960px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── inline content images (mentorship founder photos) ── */
+.prose-img { margin: 24px 0; }
+.prose-img img { width: 100%; height: auto; border-radius: var(--r-card); border: 1px solid var(--line); }
