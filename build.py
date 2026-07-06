@@ -396,10 +396,10 @@ STATS = {
 }
 
 RATES_COPY = {
-    "en": {"h": "We buy at premium rates.", "p": "These are our live buying rates, set by the desk and updated through the day. Lock yours on WhatsApp.",
+    "en": {"h": "We buy at premium rates.", "p": "Selling your USDT or Bitcoin? Here's what we pay today. Buying? Message us and we'll lock your rate on the spot.",
             "btc": "We buy Bitcoin", "usdt": "We buy USDT", "per": "XAF per USD", "lock": "Lock this rate",
             "upd": "Updated"},
-    "fr": {"h": "Nous achetons à des taux premium.", "p": "Voici nos taux d'achat en direct, fixés par le bureau et mis à jour dans la journée. Verrouillez le vôtre sur WhatsApp.",
+    "fr": {"h": "Nous achetons à des taux premium.", "p": "Vous vendez vos USDT ou Bitcoin ? Voici ce que nous payons aujourd'hui. Vous achetez ? Écrivez-nous et nous verrouillons votre taux immédiatement.",
             "btc": "Nous achetons le Bitcoin", "usdt": "Nous achetons l'USDT", "per": "XAF par USD", "lock": "Verrouiller ce taux",
             "upd": "Mis à jour"},
 }
