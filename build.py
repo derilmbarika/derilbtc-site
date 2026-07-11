@@ -214,6 +214,7 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content="{H.escape(desc, quote=True)}">
+<meta name="google-site-verification" content="T22mMmD3NnxkDC6WRAUSKON9KvQIw--y-BpNoCr0L20">
 {'<meta name="robots" content="noindex, nofollow">' if PREVIEW else '<meta name="robots" content="index, follow">'}
 <link rel="canonical" href="https://derilbtc.com{canonical_path}">
 <link rel="alternate" hreflang="{alt_lang}" href="https://derilbtc.com{alt_path}">
