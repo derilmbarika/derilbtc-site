@@ -755,7 +755,10 @@ def main():
         write(stub_path, redirect_stub(target))
     # sitemap (production URLs; harmless in preview because preview is noindexed)
     urls = "".join(f"<url><loc>https://derilbtc.com{p}</loc></url>" for p in sorted(paths))
-    write("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
+    sitemap = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+    write("sitemap.xml", sitemap)
+    # the WP-era path Google already has on file (Rank Math sitemap_index.xml)
+    write("sitemap_index.xml", sitemap)
     write("robots.txt", "User-agent: *\nAllow: /\nSitemap: https://derilbtc.com/sitemap.xml\n" if not PREVIEW
           else "User-agent: *\nDisallow: /\n")
     print(f"built {n} pages + {len(REDIRECT_STUBS)} redirect stubs + 404 into dist/")
