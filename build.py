@@ -5,7 +5,7 @@ from the Elementor HTML, and renders every page through a shared dark/premium
 template into dist/ with slugs preserved 1:1. Home pages are custom-composed;
 all other pages use the editorial service template.
 """
-import json, os, re, html as H
+import json, os, re, shutil, html as H
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -44,6 +44,28 @@ LANG_MAP = {
 }
 FR_TO_EN = {v: k for k, v in LANG_MAP.items()}
 
+def path_for(slug, lang):
+    """Site path for a page, matching the live WP URL structure exactly:
+    EN at /<slug>/, FR under /fr/<slug>/ (Polylang directory URLs)."""
+    if slug in ("home", "", None):
+        return "/"
+    prefix = "/fr" if lang == "fr" else ""
+    return f"{prefix}/{slug}/"
+
+# Old WP URLs that 301 on the live site (plus root-level FR slugs, which WP
+# redirects into /fr/). GitHub Pages can't 301, so each gets a meta-refresh
+# stub with a canonical to the target: Google treats instant meta refresh as
+# a redirect, so the equity follows.
+REDIRECT_STUBS = {
+    "fr/index.html": "/fr/derilbtc-accueil/",
+    "rmb-exchange-cameroon/index.html": "/pay-china-suppliers/",
+    "naira-to-xaf-cameroon/index.html": "/naira-to-cfa-cameroon/",
+    "about-us/index.html": "/about/",
+    "contact-us/index.html": "/",
+}
+for _fr_slug in FR_TO_EN:
+    REDIRECT_STUBS[f"{_fr_slug}/index.html"] = f"/fr/{_fr_slug}/"
+
 NAV = {
     "en": [("buy-bitcoin-cameroon", "Buy Bitcoin"), ("buy-usdt-cameroon", "USDT"),
             ("pay-china-suppliers", "China Payments"), ("rates", "Rates"),
@@ -57,7 +79,7 @@ UI = {
     "en": {"cta": "Trade on WhatsApp", "home": "/", "tagline": "Cameroon's trusted crypto desk since 2018.",
             "footer_note": "Rates quoted live on WhatsApp. MoMo, Orange Money and bank transfers.",
             "switch": "FR", "login": "Login", "sticky": "Trade on WhatsApp"},
-    "fr": {"cta": "Trader sur WhatsApp", "home": "/derilbtc-accueil/", "tagline": "Le bureau crypto de confiance du Cameroun depuis 2018.",
+    "fr": {"cta": "Trader sur WhatsApp", "home": "/fr/derilbtc-accueil/", "tagline": "Le bureau crypto de confiance du Cameroun depuis 2018.",
             "footer_note": "Taux communiqués en direct sur WhatsApp. MoMo, Orange Money et virements bancaires.",
             "switch": "EN", "login": "Login", "sticky": "Trader sur WhatsApp"},
 }
@@ -174,7 +196,7 @@ def _is_widget_artifact(b):
 def footer_cols(lang):
     cols = []
     for heading, links in FOOTER[lang]:
-        lis = "".join(f'<li><a href="/{slug}/">{label}</a></li>' for slug, label in links)
+        lis = "".join(f'<li><a href="{path_for(slug, lang)}">{label}</a></li>' for slug, label in links)
         cols.append(f"<div><h4>{heading}</h4><ul>{lis}</ul></div>")
     return "".join(cols)
 
@@ -183,7 +205,7 @@ def footer_cols(lang):
 def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
     ui = UI[lang]
     nav_links = "".join(
-        f'<a href="/{slug}/">{label}</a>' for slug, label in NAV[lang])
+        f'<a href="{path_for(slug, lang)}">{label}</a>' for slug, label in NAV[lang])
     alt_lang = "fr" if lang == "en" else "en"
     return f"""<!doctype html>
 <html lang="{lang}">
@@ -275,20 +297,27 @@ def page_html(slug, page, lang):
     title = scrub(H.unescape(page["title"]))
     h1 = next((b[1] for b in blocks if b[0] == "h1"), title)
     desc = first_paragraph(blocks)
+    alt_lang = "fr" if lang == "en" else "en"
     alt_slug = LANG_MAP.get(slug) or FR_TO_EN.get(slug)
-    alt_path = f"/{alt_slug}/" if alt_slug else ("/" if lang == "fr" else "/derilbtc-accueil/")
+    alt_path = path_for(alt_slug, alt_lang) if alt_slug else ("/" if lang == "fr" else "/fr/derilbtc-accueil/")
     hero_img = PAGE_HERO.get(slug) or PAGE_HERO.get(FR_TO_EN.get(slug, ""), "derilbtc-hero.jpg")
     hero_style = f' style="background-image: linear-gradient(rgba(10,19,48,.82), rgba(10,19,48,.94)), url(/assets/img/{hero_img})"'
+    # the rates pages and the converter-intent pages get the live converter
+    conv = converter_html(lang) if slug in ("rates", "taux", "naira-to-cfa-cameroon",
+                                            "naira-en-fcfa-cameroun", "buy-usdt-cameroon",
+                                            "acheter-usdt-cameroun") else ""
+    extra_head = ""
     body = f"""
 <main>
   <section class="page-hero page-hero-img"{hero_style}>
     <h1>{h1}</h1>
   </section>
+  {conv}
   <article class="prose" data-reveal>
     {render_blocks(blocks, lang)}
   </article>
 </main>"""
-    return shell(lang, f"{title} | DerilBTC", desc, f"/{slug}/", alt_path, body)
+    return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head)
 
 
 # ── homepage ────────────────────────────────────────────────────────────────
@@ -372,14 +401,14 @@ FOOTER = {
 # WWD panels: EN comes 1-1 from the original page (home_structure.json);
 # FR is a faithful translation (the original FR home was untranslated English).
 WWD_FR = [
-    {"kick": "Bitcoin", "h2": "Acheter et vendre du Bitcoin", "p": "Un taux public équitable, payé sur votre MoMo ou en banque en quelques minutes. Le bureau de confiance du Cameroun depuis 2018.", "cta_label": "Commencer à trader →", "cta_href": "/acheter-bitcoin-cameroun/", "img": "deril-btc.jpg"},
-    {"kick": "Stablecoin", "h2": "Acheter et vendre de l'USDT", "p": "Des dollars qui ne bougent pas. Achetez ou vendez du Tether au taux du jour, réglé directement sur le mobile money.", "cta_label": "Acheter de l'USDT →", "cta_href": "/acheter-usdt-cameroun/", "img": "deril-usdt.jpg"},
-    {"kick": "Imports", "h2": "Payer les fournisseurs en Chine", "p": "Payez les usines et les fournisseurs 1688/Alibaba en RMB, sans les délais bancaires. Votre marchandise part à temps.", "cta_label": "Payer un fournisseur →", "cta_href": "/payer-fournisseur-chine/", "img": "deril-china.jpg"},
-    {"kick": "Éducation", "h2": "Payer les frais de scolarité à l'étranger", "p": "Frais de scolarité vers les USA, le Canada, le Royaume-Uni, la Chine et au-delà, payés correctement et à temps.", "cta_label": "Payer la scolarité →", "cta_href": "/frais-de-scolarite-etranger/", "img": "deril-fees.jpg"},
-    {"kick": "Voyage", "h2": "Réserver des vols", "p": "Dites-nous où et quand. Nous trouvons et émettons le billet, vous payez en XAF. Pas besoin de carte.", "cta_label": "Réserver un vol →", "cta_href": "/reserver-vol/", "img": "deril-flights.jpg"},
-    {"kick": "Cartes-cadeaux", "h2": "Vendre des cartes-cadeaux", "p": "Transformez iTunes, Amazon, Steam et plus en cash instantané sur MoMo, à des taux honnêtes.", "cta_label": "Vendre maintenant →", "cta_href": "/vendre-cartes-cadeaux-cameroun/", "img": "deril-gift.jpg"},
-    {"kick": "Devises", "h2": "Échanger des Naira", "p": "Convertissez le Naira nigérian en CFA, USD ou USDT instantanément, avec un taux en direct que vous voyez.", "cta_label": "Échanger maintenant →", "cta_href": "/naira-en-fcfa-cameroun/", "img": "deril-naira.jpg"},
-    {"kick": "Sécurité", "h2": "Éviter les arnaques MoMo", "p": "Connaissez les pièges avant qu'ils ne vous atteignent. Un guide gratuit pour trader et envoyer de l'argent en sécurité.", "cta_label": "Rester protégé →", "cta_href": "/arnaques-momo-cameroun/", "img": "deril-scam.jpg"},
+    {"kick": "Bitcoin", "h2": "Acheter et vendre du Bitcoin", "p": "Un taux public équitable, payé sur votre MoMo ou en banque en quelques minutes. Le bureau de confiance du Cameroun depuis 2018.", "cta_label": "Commencer à trader →", "cta_href": "/fr/acheter-bitcoin-cameroun/", "img": "deril-btc.jpg"},
+    {"kick": "Stablecoin", "h2": "Acheter et vendre de l'USDT", "p": "Des dollars qui ne bougent pas. Achetez ou vendez du Tether au taux du jour, réglé directement sur le mobile money.", "cta_label": "Acheter de l'USDT →", "cta_href": "/fr/acheter-usdt-cameroun/", "img": "deril-usdt.jpg"},
+    {"kick": "Imports", "h2": "Payer les fournisseurs en Chine", "p": "Payez les usines et les fournisseurs 1688/Alibaba en RMB, sans les délais bancaires. Votre marchandise part à temps.", "cta_label": "Payer un fournisseur →", "cta_href": "/fr/payer-fournisseur-chine/", "img": "deril-china.jpg"},
+    {"kick": "Éducation", "h2": "Payer les frais de scolarité à l'étranger", "p": "Frais de scolarité vers les USA, le Canada, le Royaume-Uni, la Chine et au-delà, payés correctement et à temps.", "cta_label": "Payer la scolarité →", "cta_href": "/fr/frais-de-scolarite-etranger/", "img": "deril-fees.jpg"},
+    {"kick": "Voyage", "h2": "Réserver des vols", "p": "Dites-nous où et quand. Nous trouvons et émettons le billet, vous payez en XAF. Pas besoin de carte.", "cta_label": "Réserver un vol →", "cta_href": "/fr/reserver-vol/", "img": "deril-flights.jpg"},
+    {"kick": "Cartes-cadeaux", "h2": "Vendre des cartes-cadeaux", "p": "Transformez iTunes, Amazon, Steam et plus en cash instantané sur MoMo, à des taux honnêtes.", "cta_label": "Vendre maintenant →", "cta_href": "/fr/vendre-cartes-cadeaux-cameroun/", "img": "deril-gift.jpg"},
+    {"kick": "Devises", "h2": "Échanger des Naira", "p": "Convertissez le Naira nigérian en CFA, USD ou USDT instantanément, avec un taux en direct que vous voyez.", "cta_label": "Échanger maintenant →", "cta_href": "/fr/naira-en-fcfa-cameroun/", "img": "deril-naira.jpg"},
+    {"kick": "Sécurité", "h2": "Éviter les arnaques MoMo", "p": "Connaissez les pièges avant qu'ils ne vous atteignent. Un guide gratuit pour trader et envoyer de l'argent en sécurité.", "cta_label": "Rester protégé →", "cta_href": "/fr/arnaques-momo-cameroun/", "img": "deril-scam.jpg"},
 ]
 
 STATS = {
@@ -453,6 +482,112 @@ HOME_COPY = {
 }
 
 
+# ── live currency converter ────────────────────────────────────────────────
+# Fiat rates from open.er-api.com (free, no key, includes XAF/NGN/CNY),
+# BTC spot from Coinbase. All client-side; both APIs are CORS-open and were
+# already used this way on the WP site's converter snippets.
+CONV_CURRENCIES = ["XAF", "USD", "EUR", "GBP", "NGN", "CNY", "CAD", "AUD",
+                   "GHS", "XOF", "AED", "ZAR", "BTC", "USDT"]
+
+CONV_COPY = {
+    "en": {"h2": "Live currency converter",
+            "p": "Dollar to XAF, Naira to CFA, Yuan, Euro, even Bitcoin: check today's market rate, then lock your real rate with the desk on WhatsApp.",
+            "amount": "Amount", "from": "From", "to": "To", "swap": "Swap currencies",
+            "src": "Market reference rates, refreshed live. Your exact rate is confirmed on WhatsApp.",
+            "cta": "Lock a real rate on WhatsApp", "loading": "Loading live rates...",
+            "fail": "Live rates are unavailable right now. Message us on WhatsApp for today's rate."},
+    "fr": {"h2": "Convertisseur de devises en direct",
+            "p": "Dollar en FCFA, Naira en CFA, Yuan, Euro, et même Bitcoin : consultez le taux du marché du jour, puis verrouillez votre taux réel avec le bureau sur WhatsApp.",
+            "amount": "Montant", "from": "De", "to": "Vers", "swap": "Inverser les devises",
+            "src": "Taux de référence du marché, actualisés en direct. Votre taux exact est confirmé sur WhatsApp.",
+            "cta": "Verrouiller un taux réel sur WhatsApp", "loading": "Chargement des taux en direct...",
+            "fail": "Les taux en direct sont indisponibles pour le moment. Écrivez-nous sur WhatsApp pour le taux du jour."},
+}
+
+def converter_html(lang):
+    t = CONV_COPY[lang]
+    opts_from = "".join(f'<option value="{c}"{" selected" if c == "USD" else ""}>{c}</option>' for c in CONV_CURRENCIES)
+    opts_to = "".join(f'<option value="{c}"{" selected" if c == "XAF" else ""}>{c}</option>' for c in CONV_CURRENCIES)
+    return f"""
+  <section class="conv" id="converter">
+    <style>
+      .conv {{ max-width: 1160px; margin: 0 auto; padding: 72px 24px; }}
+      .conv-card {{ background: linear-gradient(150deg, rgba(74,141,240,.10), rgba(232,184,75,.06)); border: 1px solid rgba(74,141,240,.25); border-radius: 22px; padding: 40px 34px; }}
+      .conv h2 {{ margin: 0 0 10px; }}
+      .conv-lead {{ color: rgba(233,238,252,.75); max-width: 640px; margin-bottom: 26px; }}
+      .conv-row {{ display: grid; grid-template-columns: 1.3fr 1fr auto 1fr; gap: 12px; align-items: end; }}
+      .conv-field label {{ display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgba(233,238,252,.6); margin-bottom: 7px; }}
+      .conv-field input, .conv-field select {{ width: 100%; box-sizing: border-box; background: rgba(10,19,48,.75); border: 1px solid rgba(74,141,240,.35); color: #e9eefc; border-radius: 12px; padding: 13px 14px; font: inherit; font-size: 17px; }}
+      .conv-field input:focus, .conv-field select:focus {{ outline: 2px solid #4a8df0; border-color: transparent; }}
+      .conv-swap {{ background: rgba(74,141,240,.15); border: 1px solid rgba(74,141,240,.4); color: #e9eefc; border-radius: 12px; width: 46px; height: 46px; font-size: 19px; cursor: pointer; }}
+      .conv-swap:hover {{ background: rgba(74,141,240,.3); }}
+      .conv-result {{ margin-top: 24px; font-size: clamp(24px, 4vw, 38px); font-weight: 700; color: #e8b84b; min-height: 1.3em; overflow-wrap: anywhere; }}
+      .conv-result small {{ display: block; font-size: 14px; font-weight: 400; color: rgba(233,238,252,.55); margin-top: 6px; }}
+      .conv-note {{ font-size: 13px; color: rgba(233,238,252,.5); margin-top: 16px; }}
+      .conv-cta {{ margin-top: 18px; }}
+      @media (max-width: 760px) {{ .conv-row {{ grid-template-columns: 1fr 1fr; }} .conv-field.amt {{ grid-column: 1 / -1; }} .conv-swap {{ order: 4; width: 100%; }} }}
+    </style>
+    <div class="conv-card" data-reveal>
+      <h2>{t['h2']}</h2>
+      <p class="conv-lead">{t['p']}</p>
+      <div class="conv-row">
+        <div class="conv-field amt"><label for="cv-amt">{t['amount']}</label><input id="cv-amt" type="number" inputmode="decimal" min="0" value="100"></div>
+        <div class="conv-field"><label for="cv-from">{t['from']}</label><select id="cv-from">{opts_from}</select></div>
+        <button class="conv-swap" id="cv-swap" type="button" title="{t['swap']}" aria-label="{t['swap']}">&#8646;</button>
+        <div class="conv-field"><label for="cv-to">{t['to']}</label><select id="cv-to">{opts_to}</select></div>
+      </div>
+      <p class="conv-result" id="cv-out">{t['loading']}</p>
+      <p class="conv-note" id="cv-note">{t['src']}</p>
+      <p class="conv-cta"><a class="btn" href="{WA}?text={'Hi%21%20I%20want%20to%20exchange%20currency.' if lang == 'en' else 'Bonjour!%20Je%20veux%20changer%20des%20devises.'}" target="_blank" rel="noopener">{t['cta']}</a></p>
+    </div>
+    <script>
+    (function () {{
+      var rates = null; // units of currency per 1 USD
+      var out = document.getElementById('cv-out');
+      var amt = document.getElementById('cv-amt');
+      var selF = document.getElementById('cv-from');
+      var selT = document.getElementById('cv-to');
+      var fmt = function (v, cur) {{
+        var digits = cur === 'BTC' ? 8 : (v < 10 ? 4 : 2);
+        return v.toLocaleString(undefined, {{ maximumFractionDigits: digits }}) + ' ' + cur;
+      }};
+      var render = function () {{
+        if (!rates) return;
+        var a = parseFloat(amt.value);
+        if (isNaN(a)) {{ out.textContent = ''; return; }}
+        var f = selF.value, t = selT.value;
+        if (!rates[f] || !rates[t]) {{ out.textContent = '...'; return; }}
+        var v = a / rates[f] * rates[t];
+        out.textContent = fmt(a, f) + ' = ' + fmt(v, t);
+      }};
+      var fail = function () {{ out.textContent = {json.dumps(t['fail'])}; }};
+      Promise.all([
+        fetch('https://open.er-api.com/v6/latest/USD').then(function (r) {{ return r.json(); }}),
+        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) {{ return r.json(); }}).catch(function () {{ return null; }})
+      ]).then(function (res) {{
+        var fx = res[0];
+        if (!fx || fx.result !== 'success') return fail();
+        rates = fx.rates;
+        rates.USDT = 1;
+        if (res[1]) {{
+          var spot = parseFloat(res[1].data.amount);
+          if (spot > 0) rates.BTC = 1 / spot;
+        }}
+        if (!rates.BTC) {{
+          selF.querySelector('option[value=BTC]').disabled = true;
+          selT.querySelector('option[value=BTC]').disabled = true;
+        }}
+        render();
+      }}).catch(fail);
+      [amt, selF, selT].forEach(function (el) {{ el.addEventListener('input', render); }});
+      document.getElementById('cv-swap').addEventListener('click', function () {{
+        var f = selF.value; selF.value = selT.value; selT.value = f; render();
+      }});
+    }})();
+    </script>
+  </section>"""
+
+
 def wwd_panel(i, total, kick, h2, p, cta_href, cta_label, img, external=False):
     tgt = ' target="_blank" rel="noopener"' if external else ""
     return f"""
@@ -473,8 +608,8 @@ def home_html(lang):
     rc = RATES_COPY[lang]
     nc = NEWS_COPY[lang]
     ui = UI[lang]
-    canonical = "/" if lang == "en" else "/derilbtc-accueil/"
-    alt = "/derilbtc-accueil/" if lang == "en" else "/"
+    canonical = "/" if lang == "en" else "/fr/derilbtc-accueil/"
+    alt = "/fr/derilbtc-accueil/" if lang == "en" else "/"
     rotator_items = "".join(f'<span class="rot-item">{label}</span>' for _, label, _, _ in SERVICES[lang])
 
     # WWD pinned stage: EN 1-1 from the original page, FR faithful translation.
@@ -544,6 +679,8 @@ def home_html(lang):
     </div>
   </section>
 
+  {converter_html(lang)}
+
   <section class="stats">
     <h2>{STATS[lang]['h2']}</h2>
     <div class="stats-grid">{stat_tiles}</div>
@@ -556,7 +693,7 @@ def home_html(lang):
 
   <section class="refer" data-reveal>
     <h2>{c['refer_h']}</h2>
-    <p>{c['refer_p']} <a href="/{c['refer_link']}/">{c['refer_label']}</a></p>
+    <p>{c['refer_p']} <a href="{path_for(c['refer_link'], lang)}">{c['refer_label']}</a></p>
   </section>
 
   <section class="newsletter">
@@ -585,26 +722,42 @@ def write(path, content):
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf-8")
 
+def redirect_stub(target):
+    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            f'<meta name="robots" content="noindex">'
+            f'<link rel="canonical" href="https://derilbtc.com{target}">'
+            f'<meta http-equiv="refresh" content="0;url={target}">'
+            f'<title>Redirecting | DerilBTC</title></head>'
+            f'<body><p><a href="{target}">Continue to DerilBTC</a></p></body></html>')
+
 def main():
+    # static assets (css/js/fonts/img) ship from the canonical assets/ folder
+    if (ROOT / "assets").exists():
+        shutil.copytree(ROOT / "assets", DIST / "assets", dirs_exist_ok=True)
+        (DIST / ".nojekyll").write_text("")
     n = 0
+    paths = ["/", "/fr/derilbtc-accueil/"]
     write("index.html", home_html("en")); n += 1
-    write("derilbtc-accueil/index.html", home_html("fr")); n += 1
+    write("fr/derilbtc-accueil/index.html", home_html("fr")); n += 1
     for slug, page in RAW.items():
         if slug in ("home", "derilbtc-accueil"):
             continue
-        write(f"{slug}/index.html", page_html(slug, page, page["lang"])); n += 1
+        path = path_for(slug, page["lang"])
+        paths.append(path)
+        write(f"{path.lstrip('/')}index.html", page_html(slug, page, page["lang"])); n += 1
     write("404.html", shell("en", "Page not found | DerilBTC",
         "That page does not exist.", "/404.html", "/",
         '<main><section class="page-hero"><h1>Page not found.</h1></section>'
         '<article class="prose"><p><a href="/">Back to the homepage</a></p></article></main>'))
+    # meta-refresh stubs that mirror the live WP 301s (old URLs keep resolving)
+    for stub_path, target in REDIRECT_STUBS.items():
+        write(stub_path, redirect_stub(target))
     # sitemap (production URLs; harmless in preview because preview is noindexed)
-    slugs = ["", "derilbtc-accueil/"] + sorted(
-        f"{s}/" for s in RAW if s not in ("home", "derilbtc-accueil"))
-    urls = "".join(f"<url><loc>https://derilbtc.com/{s}</loc></url>" for s in slugs)
+    urls = "".join(f"<url><loc>https://derilbtc.com{p}</loc></url>" for p in sorted(paths))
     write("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
     write("robots.txt", "User-agent: *\nAllow: /\nSitemap: https://derilbtc.com/sitemap.xml\n" if not PREVIEW
           else "User-agent: *\nDisallow: /\n")
-    print(f"built {n} pages + 404 into dist/")
+    print(f"built {n} pages + {len(REDIRECT_STUBS)} redirect stubs + 404 into dist/")
 
 if __name__ == "__main__":
     main()

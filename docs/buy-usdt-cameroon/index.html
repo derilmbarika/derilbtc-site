@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Buy USDT in Cameroon: Stable Dollars for Savings and Payments | DerilBTC</title>
 <meta name="description" content="USDT (Tether) holds the value of the US dollar. 1 USDT stays worth about 1 USD, today and tomorrow. That makes it the tool Cameroonians use to save in dollars">
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="index, follow">
 <link rel="canonical" href="https://derilbtc.com/buy-usdt-cameroon/">
-<link rel="alternate" hreflang="fr" href="https://derilbtc.com/acheter-usdt-cameroun/">
+<link rel="alternate" hreflang="fr" href="https://derilbtc.com/fr/acheter-usdt-cameroun/">
 <link rel="alternate" hreflang="en" href="https://derilbtc.com/buy-usdt-cameroon/">
 <meta property="og:title" content="Buy USDT in Cameroon: Stable Dollars for Savings and Payments | DerilBTC">
 <meta property="og:description" content="USDT (Tether) holds the value of the US dollar. 1 USDT stays worth about 1 USD, today and tomorrow. That makes it the tool Cameroonians use to save in dollars">
@@ -25,7 +25,7 @@
   <nav class="nav-links" aria-label="Site"><a href="/buy-bitcoin-cameroon/">Buy Bitcoin</a><a href="/buy-usdt-cameroon/">USDT</a><a href="/pay-china-suppliers/">China Payments</a><a href="/rates/">Rates</a><a href="/faq/">FAQ</a><a href="/about/">About</a></nav>
   <div class="nav-side">
     
-    <a class="nav-lang" href="/acheter-usdt-cameroun/">FR</a>
+    <a class="nav-lang" href="/fr/acheter-usdt-cameroun/">FR</a>
     <a class="nav-cta" href="https://wa.me/237673259112" target="_blank" rel="noopener">Trade on WhatsApp</a>
   </div>
 </header>
@@ -33,6 +33,84 @@
 <main>
   <section class="page-hero page-hero-img" style="background-image: linear-gradient(rgba(10,19,48,.82), rgba(10,19,48,.94)), url(/assets/img/derilbtc-usdt-instant.jpg)">
     <h1>Buy USDT in Cameroon: Stable Dollars for Savings and Payments</h1>
+  </section>
+  
+  <section class="conv" id="converter">
+    <style>
+      .conv { max-width: 1160px; margin: 0 auto; padding: 72px 24px; }
+      .conv-card { background: linear-gradient(150deg, rgba(74,141,240,.10), rgba(232,184,75,.06)); border: 1px solid rgba(74,141,240,.25); border-radius: 22px; padding: 40px 34px; }
+      .conv h2 { margin: 0 0 10px; }
+      .conv-lead { color: rgba(233,238,252,.75); max-width: 640px; margin-bottom: 26px; }
+      .conv-row { display: grid; grid-template-columns: 1.3fr 1fr auto 1fr; gap: 12px; align-items: end; }
+      .conv-field label { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgba(233,238,252,.6); margin-bottom: 7px; }
+      .conv-field input, .conv-field select { width: 100%; box-sizing: border-box; background: rgba(10,19,48,.75); border: 1px solid rgba(74,141,240,.35); color: #e9eefc; border-radius: 12px; padding: 13px 14px; font: inherit; font-size: 17px; }
+      .conv-field input:focus, .conv-field select:focus { outline: 2px solid #4a8df0; border-color: transparent; }
+      .conv-swap { background: rgba(74,141,240,.15); border: 1px solid rgba(74,141,240,.4); color: #e9eefc; border-radius: 12px; width: 46px; height: 46px; font-size: 19px; cursor: pointer; }
+      .conv-swap:hover { background: rgba(74,141,240,.3); }
+      .conv-result { margin-top: 24px; font-size: clamp(24px, 4vw, 38px); font-weight: 700; color: #e8b84b; min-height: 1.3em; overflow-wrap: anywhere; }
+      .conv-result small { display: block; font-size: 14px; font-weight: 400; color: rgba(233,238,252,.55); margin-top: 6px; }
+      .conv-note { font-size: 13px; color: rgba(233,238,252,.5); margin-top: 16px; }
+      .conv-cta { margin-top: 18px; }
+      @media (max-width: 760px) { .conv-row { grid-template-columns: 1fr 1fr; } .conv-field.amt { grid-column: 1 / -1; } .conv-swap { order: 4; width: 100%; } }
+    </style>
+    <div class="conv-card" data-reveal>
+      <h2>Live currency converter</h2>
+      <p class="conv-lead">Dollar to XAF, Naira to CFA, Yuan, Euro, even Bitcoin: check today's market rate, then lock your real rate with the desk on WhatsApp.</p>
+      <div class="conv-row">
+        <div class="conv-field amt"><label for="cv-amt">Amount</label><input id="cv-amt" type="number" inputmode="decimal" min="0" value="100"></div>
+        <div class="conv-field"><label for="cv-from">From</label><select id="cv-from"><option value="XAF">XAF</option><option value="USD" selected>USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="NGN">NGN</option><option value="CNY">CNY</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="GHS">GHS</option><option value="XOF">XOF</option><option value="AED">AED</option><option value="ZAR">ZAR</option><option value="BTC">BTC</option><option value="USDT">USDT</option></select></div>
+        <button class="conv-swap" id="cv-swap" type="button" title="Swap currencies" aria-label="Swap currencies">&#8646;</button>
+        <div class="conv-field"><label for="cv-to">To</label><select id="cv-to"><option value="XAF" selected>XAF</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="NGN">NGN</option><option value="CNY">CNY</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="GHS">GHS</option><option value="XOF">XOF</option><option value="AED">AED</option><option value="ZAR">ZAR</option><option value="BTC">BTC</option><option value="USDT">USDT</option></select></div>
+      </div>
+      <p class="conv-result" id="cv-out">Loading live rates...</p>
+      <p class="conv-note" id="cv-note">Market reference rates, refreshed live. Your exact rate is confirmed on WhatsApp.</p>
+      <p class="conv-cta"><a class="btn" href="https://wa.me/237673259112?text=Hi%21%20I%20want%20to%20exchange%20currency." target="_blank" rel="noopener">Lock a real rate on WhatsApp</a></p>
+    </div>
+    <script>
+    (function () {
+      var rates = null; // units of currency per 1 USD
+      var out = document.getElementById('cv-out');
+      var amt = document.getElementById('cv-amt');
+      var selF = document.getElementById('cv-from');
+      var selT = document.getElementById('cv-to');
+      var fmt = function (v, cur) {
+        var digits = cur === 'BTC' ? 8 : (v < 10 ? 4 : 2);
+        return v.toLocaleString(undefined, { maximumFractionDigits: digits }) + ' ' + cur;
+      };
+      var render = function () {
+        if (!rates) return;
+        var a = parseFloat(amt.value);
+        if (isNaN(a)) { out.textContent = ''; return; }
+        var f = selF.value, t = selT.value;
+        if (!rates[f] || !rates[t]) { out.textContent = '...'; return; }
+        var v = a / rates[f] * rates[t];
+        out.textContent = fmt(a, f) + ' = ' + fmt(v, t);
+      };
+      var fail = function () { out.textContent = "Live rates are unavailable right now. Message us on WhatsApp for today's rate."; };
+      Promise.all([
+        fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
+        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
+      ]).then(function (res) {
+        var fx = res[0];
+        if (!fx || fx.result !== 'success') return fail();
+        rates = fx.rates;
+        rates.USDT = 1;
+        if (res[1]) {
+          var spot = parseFloat(res[1].data.amount);
+          if (spot > 0) rates.BTC = 1 / spot;
+        }
+        if (!rates.BTC) {
+          selF.querySelector('option[value=BTC]').disabled = true;
+          selT.querySelector('option[value=BTC]').disabled = true;
+        }
+        render();
+      }).catch(fail);
+      [amt, selF, selT].forEach(function (el) { el.addEventListener('input', render); });
+      document.getElementById('cv-swap').addEventListener('click', function () {
+        var f = selF.value; selF.value = selT.value; selT.value = f; render();
+      });
+    })();
+    </script>
   </section>
   <article class="prose" data-reveal>
     <p>USDT (Tether) holds the value of the US dollar. 1 USDT stays worth about 1 USD, today and tomorrow. That makes it the tool Cameroonians use to save in dollars, pay foreign suppliers, and receive money from abroad without watching the value melt.</p>
