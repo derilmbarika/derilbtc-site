@@ -214,7 +214,7 @@ def footer_cols(lang):
     cols = []
     for heading, links in FOOTER[lang]:
         lis = "".join(f'<li><a href="{path_for(slug, lang)}">{label}</a></li>' for slug, label in links)
-        cols.append(f"<div><h4>{heading}</h4><ul>{lis}</ul></div>")
+        cols.append(f"<div><h3>{heading}</h3><ul>{lis}</ul></div>")
     return "".join(cols)
 
 
@@ -274,7 +274,7 @@ def render_schema(lang, canonical_url, title, desc, canonical_path, extra_nodes=
 
 
 # ── shared page shell ───────────────────────────────────────────────────────
-def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extra_schema=None):
+def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extra_schema=None, preload_img=None):
     ui = UI[lang]
     nav_links = "".join(
         f'<a href="{path_for(slug, lang)}">{label}</a>' for slug, label in NAV[lang])
@@ -289,6 +289,11 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extr
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1330">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://api.coingecko.com" crossorigin>
+<link rel="preconnect" href="https://open.er-api.com" crossorigin>
+<link rel="preconnect" href="https://api.coinbase.com" crossorigin>
 <title>{title}</title>
 <meta name="description" content="{H.escape(desc, quote=True)}">
 <meta name="google-site-verification" content="T22mMmD3NnxkDC6WRAUSKON9KvQIw--y-BpNoCr0L20">
@@ -314,6 +319,8 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extr
 <meta name="twitter:image" content="{OG_IMAGE}">
 <link rel="icon" href="/assets/img/derilbtc-icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/assets/img/derilbtc-icon-512.png">
+<link rel="manifest" href="/site.webmanifest">
+{f'<link rel="preload" as="image" href="{preload_img}" type="image/webp" fetchpriority="high">' if preload_img else ''}
 <link rel="preload" href="/assets/fonts/space-grotesk-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css">
 {extra_head}
@@ -428,7 +435,7 @@ def page_html(slug, page, lang):
     {render_blocks(blocks, lang)}
   </article>
 </main>"""
-    return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head, extra_schema=faq_nodes)
+    return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head, extra_schema=faq_nodes, preload_img=f"/assets/img/{webp_of(hero_img)}")
 
 
 # ── homepage ────────────────────────────────────────────────────────────────
@@ -834,7 +841,8 @@ def home_html(lang):
         "provider": {"@id": f"{SITE}/#org"},
         "areaServed": {"@type": "Country", "name": "Cameroon"},
     } for sslug, name, blurb, _ in SERVICES[lang]]
-    return shell(lang, title, desc, canonical, alt, body, extra_schema=services_schema)
+    return shell(lang, title, desc, canonical, alt, body, extra_schema=services_schema,
+                 preload_img="/assets/img/derilbtc-hero.webp")
 
 
 # ── build ───────────────────────────────────────────────────────────────────
@@ -881,6 +889,19 @@ def main():
     write("sitemap_index.xml", sitemap)
     write("robots.txt", "User-agent: *\nAllow: /\nSitemap: https://derilbtc.com/sitemap.xml\n" if not PREVIEW
           else "User-agent: *\nDisallow: /\n")
+    # PWA manifest (installable add-to-home-screen with the brand icon)
+    manifest = {
+        "name": "DerilBTC", "short_name": "DerilBTC",
+        "description": "Buy and sell Bitcoin, USDT and cross-border payments in Cameroon, paid to MoMo in minutes.",
+        "start_url": "/", "scope": "/", "display": "standalone",
+        "background_color": "#0a1330", "theme_color": "#0a1330", "lang": "en",
+        "icons": [
+            {"src": "/assets/img/derilbtc-icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/assets/img/derilbtc-icon-512.png", "sizes": "512x512", "type": "image/png",
+             "purpose": "any maskable"},
+        ],
+    }
+    write("site.webmanifest", json.dumps(manifest, ensure_ascii=False, indent=2))
     print(f"built {n} pages + {len(REDIRECT_STUBS)} redirect stubs + 404 into dist/")
 
 if __name__ == "__main__":
