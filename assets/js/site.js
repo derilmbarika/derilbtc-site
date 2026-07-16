@@ -102,15 +102,32 @@
   gsap.registerPlugin(ScrollTrigger);
   window.addEventListener("load", function () { ScrollTrigger.refresh(); });
 
-  gsap.from(".hero h1 .line > span", {
-    yPercent: 112, duration: 1.0, ease: "power4.out", stagger: 0.09, delay: 0.1
-  });
-  gsap.from(".hero-sub, .hero .rotator, .hero .btn-lg, .ticker", {
-    opacity: 0, y: 16, duration: 0.8, ease: "power3.out", stagger: 0.08, delay: 0.4
-  });
-  gsap.from(".hero-media img", {
-    opacity: 0, y: 26, rotate: 3.5, duration: 1.1, ease: "power3.out", delay: 0.35
-  });
+  function playHeroIntro() {
+    gsap.from(".hero h1 .line > span", {
+      yPercent: 112, duration: 1.0, ease: "power4.out", stagger: 0.09, delay: 0.1
+    });
+    gsap.from(".hero-sub, .hero .rotator, .hero .btn-lg, .ticker", {
+      opacity: 0, y: 16, duration: 0.8, ease: "power3.out", stagger: 0.08, delay: 0.4
+    });
+    gsap.from(".hero-media img", {
+      opacity: 0, y: 26, rotate: 3.5, duration: 1.1, ease: "power3.out", delay: 0.35
+    });
+  }
+  // Only run the intro when the tab is actually visible. In a background tab
+  // requestAnimationFrame is paused, so gsap.from() would apply the hidden
+  // start state and never tick forward, leaving the hero blank. Deferring to
+  // the first "visible" keeps the headline readable no matter how the page is
+  // opened. With no JS / no GSAP the hero is already visible (CSS default).
+  if (document.visibilityState === "visible") {
+    playHeroIntro();
+  } else {
+    document.addEventListener("visibilitychange", function onVisible() {
+      if (document.visibilityState === "visible") {
+        document.removeEventListener("visibilitychange", onVisible);
+        playHeroIntro();
+      }
+    });
+  }
 
   // rotating service line
   var items = document.querySelectorAll(".rot-item");
@@ -131,6 +148,10 @@
   if (stage) {
     var mm = gsap.matchMedia();
     mm.add("(min-width: 961px)", function () {
+      // Mark the stage as pin-driven only now that GSAP is confirmed present.
+      // The CSS keys the overlay/hidden panel state off .js-pin, so if GSAP is
+      // ever blocked or fails to load the panels stay stacked and readable.
+      stage.classList.add("js-pin");
       var panels = gsap.utils.toArray(".wwd-panel");
       var bar = document.getElementById("wwd-bar");
       var per = 620; // scroll px per panel
@@ -149,6 +170,7 @@
           .fromTo(p, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", pointerEvents: "auto" }, i + 0.4);
       });
       if (bar) tl.to(bar, { width: "100%", ease: "none", duration: panels.length }, 0);
+      return function () { stage.classList.remove("js-pin"); };
     });
   }
 

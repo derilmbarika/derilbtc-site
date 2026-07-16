@@ -44,6 +44,23 @@ LANG_MAP = {
 }
 FR_TO_EN = {v: k for k, v in LANG_MAP.items()}
 
+SITE = "https://derilbtc.com"
+OG_IMAGE = f"{SITE}/assets/img/derilbtc-og.jpg"
+
+
+def webp_of(path):
+    """Sibling .webp path for a raster asset."""
+    return re.sub(r"\.(jpe?g|png)$", ".webp", path, flags=re.I)
+
+
+def picture(src, alt, img_attrs="", cls=""):
+    """<picture> with a WebP source and the original as universal fallback."""
+    cls_attr = f' class="{cls}"' if cls else ""
+    extra = f" {img_attrs}" if img_attrs else ""
+    return (f'<picture{cls_attr}><source srcset="{webp_of(src)}" type="image/webp">'
+            f'<img src="{src}" alt="{H.escape(alt, quote=True)}"{extra}></picture>')
+
+
 def path_for(slug, lang):
     """Site path for a page, matching the live WP URL structure exactly:
     EN at /<slug>/, FR under /fr/<slug>/ (Polylang directory URLs)."""
@@ -201,12 +218,72 @@ def footer_cols(lang):
     return "".join(cols)
 
 
+# ── structured data (JSON-LD) ───────────────────────────────────────────────
+def render_schema(lang, canonical_url, title, desc, canonical_path, extra_nodes=None):
+    """One @graph per page: Organization/FinancialService + WebSite + WebPage,
+    a BreadcrumbList on inner pages, plus any page-specific nodes (FAQ, Services)."""
+    org = {
+        "@type": ["Organization", "FinancialService"],
+        "@id": f"{SITE}/#org",
+        "name": "DerilBTC",
+        "url": f"{SITE}/",
+        "logo": f"{SITE}/assets/img/derilbtc-logo-light.png",
+        "image": OG_IMAGE,
+        "description": "Cameroon's trusted desk for buying and selling Bitcoin and USDT, "
+                       "cross-border payments, flights and gift cards, paid to MoMo or bank.",
+        "foundingDate": "2018",
+        "areaServed": {"@type": "Country", "name": "Cameroon"},
+        "availableLanguage": ["en", "fr"],
+        "currenciesAccepted": "XAF",
+        "email": "info@derilbtc.com",
+        "contactPoint": {
+            "@type": "ContactPoint", "contactType": "customer service",
+            "telephone": "+237673259112", "url": WA,
+            "availableLanguage": ["en", "fr"],
+        },
+    }
+    website = {
+        "@type": "WebSite", "@id": f"{SITE}/#website", "url": f"{SITE}/",
+        "name": "DerilBTC", "inLanguage": lang,
+        "publisher": {"@id": f"{SITE}/#org"},
+    }
+    webpage = {
+        "@type": "WebPage", "@id": f"{canonical_url}#webpage", "url": canonical_url,
+        "name": title, "description": desc, "inLanguage": lang,
+        "isPartOf": {"@id": f"{SITE}/#website"}, "about": {"@id": f"{SITE}/#org"},
+        "primaryImageOfPage": OG_IMAGE,
+    }
+    graph = [org, website, webpage]
+    # breadcrumb on every non-home page
+    home_path = "/" if lang == "en" else "/fr/derilbtc-accueil/"
+    if canonical_path != home_path:
+        graph.append({
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1,
+                 "name": "Accueil" if lang == "fr" else "Home", "item": f"{SITE}{home_path}"},
+                {"@type": "ListItem", "position": 2, "name": title.split(" | ")[0]},
+            ],
+        })
+    if extra_nodes:
+        graph.extend(extra_nodes)
+    data = {"@context": "https://schema.org", "@graph": graph}
+    return ('<script type="application/ld+json">'
+            + json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+            + "</script>")
+
+
 # ── shared page shell ───────────────────────────────────────────────────────
-def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
+def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extra_schema=None):
     ui = UI[lang]
     nav_links = "".join(
         f'<a href="{path_for(slug, lang)}">{label}</a>' for slug, label in NAV[lang])
     alt_lang = "fr" if lang == "en" else "en"
+    canonical_url = f"{SITE}{canonical_path}"
+    en_url = canonical_path if lang == "en" else alt_path
+    og_locale = "en_US" if lang == "en" else "fr_FR"
+    og_alt_locale = "fr_FR" if lang == "en" else "en_US"
+    schema = render_schema(lang, canonical_url, title, desc, canonical_path, extra_schema)
     return f"""<!doctype html>
 <html lang="{lang}">
 <head>
@@ -216,22 +293,35 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
 <meta name="description" content="{H.escape(desc, quote=True)}">
 <meta name="google-site-verification" content="T22mMmD3NnxkDC6WRAUSKON9KvQIw--y-BpNoCr0L20">
 {'<meta name="robots" content="noindex, nofollow">' if PREVIEW else '<meta name="robots" content="index, follow">'}
-<link rel="canonical" href="https://derilbtc.com{canonical_path}">
+<link rel="canonical" href="{canonical_url}">
 <link rel="alternate" hreflang="{alt_lang}" href="https://derilbtc.com{alt_path}">
-<link rel="alternate" hreflang="{lang}" href="https://derilbtc.com{canonical_path}">
+<link rel="alternate" hreflang="{lang}" href="{canonical_url}">
+<link rel="alternate" hreflang="x-default" href="https://derilbtc.com{en_url}">
 <meta property="og:title" content="{H.escape(title, quote=True)}">
 <meta property="og:description" content="{H.escape(desc, quote=True)}">
 <meta property="og:type" content="website">
+<meta property="og:url" content="{canonical_url}">
+<meta property="og:site_name" content="DerilBTC">
+<meta property="og:locale" content="{og_locale}">
+<meta property="og:locale:alternate" content="{og_alt_locale}">
+<meta property="og:image" content="{OG_IMAGE}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DerilBTC: buy and sell Bitcoin, USDT and cross-border payments in Cameroon">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{H.escape(title, quote=True)}">
+<meta name="twitter:description" content="{H.escape(desc, quote=True)}">
+<meta name="twitter:image" content="{OG_IMAGE}">
 <link rel="icon" href="/assets/img/derilbtc-icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/assets/img/derilbtc-icon-512.png">
 <link rel="preload" href="/assets/fonts/space-grotesk-var-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="/assets/css/site.css">
 {extra_head}
+{schema}
 </head>
 <body>
 <header class="nav">
-  <a class="nav-name" href="{ui['home']}"><img src="/assets/img/derilbtc-logo-light.png" alt="DerilBTC" height="34" width="145"></a>
+  <a class="nav-name" href="{ui['home']}">{picture("/assets/img/derilbtc-logo-light.png", "DerilBTC", 'height="34" width="145"')}</a>
   <nav class="nav-links" aria-label="Site">{nav_links}</nav>
   <div class="nav-side">
     {f'<a class="nav-login" href="{ADMIN_URL}/admin" target="_blank" rel="noopener">{ui["login"]}</a>' if ADMIN_URL else ''}
@@ -249,8 +339,8 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head=""):
   </div>
 </footer>
 <a class="sticky-cta" href="{WA}" target="_blank" rel="noopener">{ui['sticky']}</a>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/assets/js/gsap.min.js" defer></script>
+<script src="/assets/js/ScrollTrigger.min.js" defer></script>
 <script src="/assets/js/site.js" defer></script>
 </body>
 </html>"""
@@ -278,7 +368,7 @@ def render_blocks(blocks, lang):
             out.append(f'<a class="btn" href="{H.escape(href, quote=True)}" target="_blank" rel="noopener">{label}</a>')
         elif kind == "img":
             src, alt = b[1]
-            out.append(f'<figure class="prose-img"><img src="{H.escape(src, quote=True)}" alt="{H.escape(alt, quote=True)}" loading="lazy"></figure>')
+            out.append('<figure class="prose-img">' + picture(src, alt, 'loading="lazy"') + '</figure>')
     return "\n".join(out)
 
 
@@ -302,12 +392,32 @@ def page_html(slug, page, lang):
     alt_slug = LANG_MAP.get(slug) or FR_TO_EN.get(slug)
     alt_path = path_for(alt_slug, alt_lang) if alt_slug else ("/" if lang == "fr" else "/fr/derilbtc-accueil/")
     hero_img = PAGE_HERO.get(slug) or PAGE_HERO.get(FR_TO_EN.get(slug, ""), "derilbtc-hero.jpg")
-    hero_style = f' style="background-image: linear-gradient(rgba(10,19,48,.82), rgba(10,19,48,.94)), url(/assets/img/{hero_img})"'
+    hero_style = f' style="background-image: linear-gradient(rgba(10,19,48,.82), rgba(10,19,48,.94)), url(/assets/img/{webp_of(hero_img)})"'
     # the rates pages and the converter-intent pages get the live converter
     conv = converter_html(lang) if slug in ("rates", "taux", "naira-to-cfa-cameroon",
                                             "naira-en-fcfa-cameroun", "buy-usdt-cameroon",
                                             "acheter-usdt-cameroun") else ""
     extra_head = ""
+    # FAQPage schema, paired from the FAQ page's own headings + answers
+    faq_nodes = None
+    if slug in ("faq", "faq-2"):
+        qa, q, ans = [], None, []
+        strip = lambda s: re.sub(r"<[^>]+>", "", s).strip()
+        for b in blocks:
+            if b[0] in ("h2", "h3", "h4"):
+                if q and ans:
+                    qa.append((q, " ".join(ans)))
+                q, ans = strip(b[1]), []
+            elif b[0] == "p" and q:
+                ans.append(strip(b[1]))
+            elif b[0] in ("ul", "ol") and q:
+                ans.append(" ".join(strip(i) for i in b[1]))
+        if q and ans:
+            qa.append((q, " ".join(ans)))
+        if qa:
+            faq_nodes = [{"@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": qq,
+                 "acceptedAnswer": {"@type": "Answer", "text": aa}} for qq, aa in qa]}]
     body = f"""
 <main>
   <section class="page-hero page-hero-img"{hero_style}>
@@ -318,7 +428,7 @@ def page_html(slug, page, lang):
     {render_blocks(blocks, lang)}
   </article>
 </main>"""
-    return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head)
+    return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head, extra_schema=faq_nodes)
 
 
 # ── homepage ────────────────────────────────────────────────────────────────
@@ -591,6 +701,8 @@ def converter_html(lang):
 
 def wwd_panel(i, total, kick, h2, p, cta_href, cta_label, img, external=False):
     tgt = ' target="_blank" rel="noopener"' if external else ""
+    load = "eager" if i == 1 else "lazy"
+    media = picture(f"/assets/img/{img}", h2, f'loading="{load}" width="800" height="447"')
     return f"""
       <article class="wwd-panel" data-panel="{i}">
         <div class="wwd-content">
@@ -600,7 +712,7 @@ def wwd_panel(i, total, kick, h2, p, cta_href, cta_label, img, external=False):
           <p>{p}</p>
           <a class="btn" href="{cta_href}"{tgt}>{cta_label}</a>
         </div>
-        <div class="wwd-media"><img src="/assets/img/{img}" alt="" loading="{'eager' if i == 1 else 'lazy'}" width="800" height="447"></div>
+        <div class="wwd-media">{media}</div>
       </article>"""
 
 
@@ -627,8 +739,10 @@ def home_html(lang):
     hero_sub = (scrub(H.unescape(HOME_STRUCT.get("hero_p", c["sub"]))) if lang == "en"
                 else "Achetez et vendez Bitcoin et USDT, payez fournisseurs et frais de scolarité à l'étranger, réservez des vols, vendez des cartes-cadeaux et échangez des Naira. Tout au Cameroun, tout payé sur MoMo en quelques minutes.")
 
+    # Render the real number as the text (readable with no JS); when GSAP is
+    # present the count-up animates from 0 up to it.
     stat_tiles = "".join(
-        f"""<div class="stat"><b{f' data-count="{t["count"]}"' if t["count"] else ''}>{'0' if t["count"] else t["b"]}</b><span>{t["s"]}</span></div>"""
+        f"""<div class="stat"><b{f' data-count="{t["count"]}"' if t["count"] else ''}>{t["b"]}</b><span>{t["s"]}</span></div>"""
         for t in STATS[lang]["tiles"])
 
     steps = "".join(f"""
@@ -650,7 +764,7 @@ def home_html(lang):
         </div>
       </div>
       <div class="hero-media">
-        <img src="/assets/img/derilbtc-hero.jpg" alt="DerilBTC: Bitcoin and money services in Cameroon" width="1400" height="781" fetchpriority="high">
+        {picture("/assets/img/derilbtc-hero.jpg", "DerilBTC: Bitcoin and money services in Cameroon", 'width="1400" height="781" fetchpriority="high"')}
       </div>
     </div>
     <div class="scrollcue" aria-hidden="true"><span class="mouse"></span></div>
@@ -714,7 +828,13 @@ def home_html(lang):
   </section>
 </main>"""
     desc = c["sub"]
-    return shell(lang, title, desc, canonical, alt, body)
+    services_schema = [{
+        "@type": "Service", "name": name, "description": blurb,
+        "url": f"{SITE}{path_for(sslug, lang)}",
+        "provider": {"@id": f"{SITE}/#org"},
+        "areaServed": {"@type": "Country", "name": "Cameroon"},
+    } for sslug, name, blurb, _ in SERVICES[lang]]
+    return shell(lang, title, desc, canonical, alt, body, extra_schema=services_schema)
 
 
 # ── build ───────────────────────────────────────────────────────────────────
