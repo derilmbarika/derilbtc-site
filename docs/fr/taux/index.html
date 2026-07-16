@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1330">
 <meta name="color-scheme" content="dark">
+<meta name="api-base" content="https://team.derilbtc.com">
+<link rel="preconnect" href="https://team.derilbtc.com" crossorigin>
 <link rel="preconnect" href="https://api.coingecko.com" crossorigin>
 <link rel="preconnect" href="https://open.er-api.com" crossorigin>
 <link rel="preconnect" href="https://api.coinbase.com" crossorigin>
@@ -108,24 +110,34 @@
         out.textContent = fmt(a, f) + ' = ' + fmt(v, t);
       };
       var fail = function () { out.textContent = "Les taux en direct sont indisponibles pour le moment. \u00c9crivez-nous sur WhatsApp pour le taux du jour."; };
-      Promise.all([
-        fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
-        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
-      ]).then(function (res) {
-        var fx = res[0];
-        if (!fx || fx.result !== 'success') return fail();
-        rates = fx.rates;
+      var API = (document.querySelector('meta[name="api-base"]') || {}).content || '';
+      var applyRates = function (fx, btcUsd) {
+        if (!fx) return fail();
+        rates = fx;
         rates.USDT = 1;
-        if (res[1]) {
-          var spot = parseFloat(res[1].data.amount);
-          if (spot > 0) rates.BTC = 1 / spot;
-        }
+        if (btcUsd && btcUsd > 0) rates.BTC = 1 / btcUsd;
         if (!rates.BTC) {
           selF.querySelector('option[value=BTC]').disabled = true;
           selT.querySelector('option[value=BTC]').disabled = true;
         }
         render();
-      }).catch(fail);
+      };
+      var directLoad = function () {
+        Promise.all([
+          fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
+          fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
+        ]).then(function (res) {
+          var fx = res[0];
+          if (!fx || fx.result !== 'success') return fail();
+          applyRates(fx.rates, res[1] && res[1].data ? parseFloat(res[1].data.amount) : 0);
+        }).catch(fail);
+      };
+      // Desk's cached market endpoint first (one fast call), else direct APIs.
+      if (API) {
+        fetch(API + '/api/market').then(function (r) { return r.json(); })
+          .then(function (m) { if (m && m.fx) applyRates(m.fx, m.btc_usd || 0); else directLoad(); })
+          .catch(directLoad);
+      } else { directLoad(); }
       [amt, selF, selT].forEach(function (el) { el.addEventListener('input', render); });
       document.getElementById('cv-swap').addEventListener('click', function () {
         var f = selF.value; selF.value = selT.value; selT.value = f; render();
@@ -139,6 +151,7 @@
 <p>Le prix mondial n'inclut pas le coût réel de la conversion entre XAF et crypto au Cameroun: liquidité, frais de paiement, opérations. Notre marge est équitable, et elle est publique, donc vous pouvez toujours comparer.</p>
 <p><a href="https://wa.me/237673259112?text=Bonjour!%20Je%20veux%20bloquer%20le%20taux%20du%20jour." target="_blank" rel="noopener">💬 Bloquer ce Taux</a></p>
   </article>
+  
 </main>
 <footer class="footer">
   <div class="footer-grid"><div><h3>Trader</h3><ul><li><a href="/fr/acheter-bitcoin-cameroun/">Acheter du Bitcoin</a></li><li><a href="/fr/acheter-usdt-cameroun/">Acheter de l'USDT</a></li><li><a href="/fr/naira-en-fcfa-cameroun/">Naira en FCFA</a></li><li><a href="/fr/vendre-cartes-cadeaux-cameroun/">Vendre des cartes-cadeaux</a></li><li><a href="/fr/taux/">Taux du jour</a></li></ul></div><div><h3>Paiements & voyage</h3><ul><li><a href="/fr/payer-fournisseur-chine/">Payer un fournisseur en Chine</a></li><li><a href="/fr/frais-de-scolarite-etranger/">Frais de scolarité</a></li><li><a href="/fr/reserver-vol/">Réserver un vol</a></li></ul></div><div><h3>Guides & sécurité</h3><ul><li><a href="/fr/securite/">Arnaques Bitcoin</a></li><li><a href="/fr/arnaques-momo-cameroun/">Arnaques MoMo</a></li><li><a href="/fr/faq-2/">FAQ</a></li><li><a href="/fr/mentorat-bitcoin-cameroun/">Mentorat 1-à-1</a></li></ul></div><div><h3>DerilBTC</h3><ul><li><a href="/fr/a-propos/">À propos</a></li><li><a href="/fr/referer/">Parrainer & gagner</a></li></ul></div></div>

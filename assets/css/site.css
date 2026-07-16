@@ -395,6 +395,35 @@ main section h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); letter-spacing: -0.02em
 .stat span { color: var(--muted); font-size: 14px; }
 @media (max-width: 960px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
 
+/* ── lead / order capture form ── */
+.lead { max-width: 1160px; margin: 0 auto; padding: clamp(40px, 7vw, 80px) clamp(18px, 4vw, 44px); }
+.lead-card {
+  background: linear-gradient(150deg, rgba(232, 184, 75, .10), rgba(74, 141, 240, .06));
+  border: 1px solid rgba(232, 184, 75, .28); border-radius: 22px; padding: clamp(26px, 4vw, 44px);
+}
+.lead-card h2 { margin: 0 0 8px; }
+.lead-lead { color: var(--muted); max-width: 60ch; margin-bottom: 24px; }
+.lead-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.lead-form label { display: flex; flex-direction: column; gap: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: rgba(233, 238, 252, .62); }
+.lead-form .lead-full { margin-top: 14px; }
+.lead-form input, .lead-form textarea {
+  background: rgba(10, 19, 48, .75); border: 1px solid rgba(74, 141, 240, .3); color: #e9eefc;
+  border-radius: 12px; padding: 13px 14px; font: inherit; font-size: 16px; width: 100%; box-sizing: border-box;
+  text-transform: none; letter-spacing: normal;
+}
+.lead-form textarea { resize: vertical; min-height: 58px; }
+.lead-form input:focus, .lead-form textarea:focus { outline: 2px solid var(--gold); border-color: transparent; }
+.lead-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.lead-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 20px; }
+.lead-or { color: var(--muted); font-size: 14.5px; }
+.lead-or a { color: var(--blue); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.lead-or a:hover { border-color: var(--blue); }
+.lead-msg { min-height: 22px; margin-top: 14px; font-size: 14.5px; font-weight: 600; }
+.lead-msg.ok { color: #22c55e; }
+.lead-msg.err { color: #ef6b6b; }
+.lead-form.busy button { opacity: .6; pointer-events: none; }
+@media (max-width: 620px) { .lead-grid { grid-template-columns: 1fr; } }
+
 /* ── inline content images (mentorship founder photos) ── */
 .prose-img { margin: 24px 0; }
 .prose-img img { width: 100%; height: auto; border-radius: var(--r-card); border: 1px solid var(--line); }

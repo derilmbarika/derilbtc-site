@@ -46,6 +46,9 @@ FR_TO_EN = {v: k for k, v in LANG_MAP.items()}
 
 SITE = "https://derilbtc.com"
 OG_IMAGE = f"{SITE}/assets/img/derilbtc-og.jpg"
+# The DerilBTC team portal backs the site's rates, lead forms, newsletter,
+# cached market data and cookie-free analytics (see derilbtc-portal/desk.js).
+TEAM_API = os.environ.get("TEAM_API", "https://team.derilbtc.com")
 
 
 def webp_of(path):
@@ -291,6 +294,8 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extr
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1330">
 <meta name="color-scheme" content="dark">
+<meta name="api-base" content="{TEAM_API}">
+<link rel="preconnect" href="{TEAM_API}" crossorigin>
 <link rel="preconnect" href="https://api.coingecko.com" crossorigin>
 <link rel="preconnect" href="https://open.er-api.com" crossorigin>
 <link rel="preconnect" href="https://api.coinbase.com" crossorigin>
@@ -434,6 +439,7 @@ def page_html(slug, page, lang):
   <article class="prose" data-reveal>
     {render_blocks(blocks, lang)}
   </article>
+  {lead_form(lang, title) if slug in SERVICE_SLUGS else ""}
 </main>"""
     return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head, extra_schema=faq_nodes, preload_img=f"/assets/img/{webp_of(hero_img)}")
 
@@ -679,30 +685,95 @@ def converter_html(lang):
         out.textContent = fmt(a, f) + ' = ' + fmt(v, t);
       }};
       var fail = function () {{ out.textContent = {json.dumps(t['fail'])}; }};
-      Promise.all([
-        fetch('https://open.er-api.com/v6/latest/USD').then(function (r) {{ return r.json(); }}),
-        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) {{ return r.json(); }}).catch(function () {{ return null; }})
-      ]).then(function (res) {{
-        var fx = res[0];
-        if (!fx || fx.result !== 'success') return fail();
-        rates = fx.rates;
+      var API = (document.querySelector('meta[name="api-base"]') || {{}}).content || '';
+      var applyRates = function (fx, btcUsd) {{
+        if (!fx) return fail();
+        rates = fx;
         rates.USDT = 1;
-        if (res[1]) {{
-          var spot = parseFloat(res[1].data.amount);
-          if (spot > 0) rates.BTC = 1 / spot;
-        }}
+        if (btcUsd && btcUsd > 0) rates.BTC = 1 / btcUsd;
         if (!rates.BTC) {{
           selF.querySelector('option[value=BTC]').disabled = true;
           selT.querySelector('option[value=BTC]').disabled = true;
         }}
         render();
-      }}).catch(fail);
+      }};
+      var directLoad = function () {{
+        Promise.all([
+          fetch('https://open.er-api.com/v6/latest/USD').then(function (r) {{ return r.json(); }}),
+          fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) {{ return r.json(); }}).catch(function () {{ return null; }})
+        ]).then(function (res) {{
+          var fx = res[0];
+          if (!fx || fx.result !== 'success') return fail();
+          applyRates(fx.rates, res[1] && res[1].data ? parseFloat(res[1].data.amount) : 0);
+        }}).catch(fail);
+      }};
+      // Desk's cached market endpoint first (one fast call), else direct APIs.
+      if (API) {{
+        fetch(API + '/api/market').then(function (r) {{ return r.json(); }})
+          .then(function (m) {{ if (m && m.fx) applyRates(m.fx, m.btc_usd || 0); else directLoad(); }})
+          .catch(directLoad);
+      }} else {{ directLoad(); }}
       [amt, selF, selT].forEach(function (el) {{ el.addEventListener('input', render); }});
       document.getElementById('cv-swap').addEventListener('click', function () {{
         var f = selF.value; selF.value = selT.value; selT.value = f; render();
       }});
     }})();
     </script>
+  </section>"""
+
+
+# ── lead / order capture form (posts to the team portal, notifies admins) ────
+SERVICE_SLUGS = {
+    "buy-bitcoin-cameroon", "buy-usdt-cameroon", "pay-china-suppliers",
+    "pay-school-fees-abroad", "book-flights", "sell-gift-cards-cameroon",
+    "naira-to-cfa-cameroon",
+    "acheter-bitcoin-cameroun", "acheter-usdt-cameroun", "payer-fournisseur-chine",
+    "frais-de-scolarite-etranger", "reserver-vol", "vendre-cartes-cadeaux-cameroun",
+    "naira-en-fcfa-cameroun",
+}
+
+LEAD_COPY = {
+    "en": {"h": "Start your order", "p": "Send the desk your details and we'll message you on WhatsApp with a locked rate, usually within minutes during working hours.",
+            "name": "Your name", "wa": "WhatsApp number", "email": "Email (optional)",
+            "amount": "Amount / what you want", "amount_ph": "e.g. buy 100,000 XAF of USDT",
+            "msg": "Anything else? (optional)", "send": "Send my request", "or": "or",
+            "wa_cta": "chat on WhatsApp now", "sending": "Sending...",
+            "ok": "Got it. We've received your request and will message you on WhatsApp shortly.",
+            "err": "Something went wrong. Please try again, or message us on WhatsApp."},
+    "fr": {"h": "Commencer votre commande", "p": "Envoyez vos coordonnees au bureau et nous vous ecrirons sur WhatsApp avec un taux verrouille, generalement en quelques minutes aux heures ouvrables.",
+            "name": "Votre nom", "wa": "Numero WhatsApp", "email": "Email (facultatif)",
+            "amount": "Montant / ce que vous voulez", "amount_ph": "ex. acheter 100 000 XAF d'USDT",
+            "msg": "Autre chose ? (facultatif)", "send": "Envoyer ma demande", "or": "ou",
+            "wa_cta": "discuter sur WhatsApp maintenant", "sending": "Envoi...",
+            "ok": "C'est note. Nous avons bien recu votre demande et vous ecrirons sur WhatsApp sous peu.",
+            "err": "Une erreur s'est produite. Reessayez ou ecrivez-nous sur WhatsApp."},
+}
+
+def lead_form(lang, service_label):
+    t = LEAD_COPY[lang]
+    wa = f"{WA}?text={'Hi%20DerilBTC%21%20I%20want%20to%20trade.' if lang == 'en' else 'Bonjour%20DerilBTC%21%20Je%20veux%20trader.'}"
+    return f"""
+  <section class="lead" id="order">
+    <div class="lead-card" data-reveal>
+      <h2>{t['h']}</h2>
+      <p class="lead-lead">{t['p']}</p>
+      <form class="lead-form" data-service="{H.escape(service_label, quote=True)}" data-lang="{lang}"
+            data-ok="{H.escape(t['ok'], quote=True)}" data-err="{H.escape(t['err'], quote=True)}" data-sending="{H.escape(t['sending'], quote=True)}">
+        <div class="lead-grid">
+          <label>{t['name']}<input name="name" required autocomplete="name"></label>
+          <label>{t['wa']}<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
+          <label>{t['email']}<input name="email" type="email" autocomplete="email"></label>
+          <label>{t['amount']}<input name="amount" placeholder="{t['amount_ph']}"></label>
+        </div>
+        <label class="lead-full">{t['msg']}<textarea name="message" rows="2"></textarea></label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+        <div class="lead-actions">
+          <button class="btn" type="submit">{t['send']}</button>
+          <span class="lead-or">{t['or']} <a href="{wa}" target="_blank" rel="noopener">{t['wa_cta']}</a></span>
+        </div>
+        <p class="lead-msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   </section>"""
 
 
@@ -828,6 +899,8 @@ def home_html(lang):
     </form>
     <p id="nl-msg" role="status"></p>
   </section>
+
+  {lead_form(lang, "Homepage enquiry" if lang == "en" else "Demande page d'accueil")}
 
   <section class="cta-band">
     <h2>{c['cta_h']}</h2>

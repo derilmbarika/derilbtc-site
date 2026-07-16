@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1330">
 <meta name="color-scheme" content="dark">
+<meta name="api-base" content="https://team.derilbtc.com">
+<link rel="preconnect" href="https://team.derilbtc.com" crossorigin>
 <link rel="preconnect" href="https://api.coingecko.com" crossorigin>
 <link rel="preconnect" href="https://open.er-api.com" crossorigin>
 <link rel="preconnect" href="https://api.coinbase.com" crossorigin>
@@ -108,24 +110,34 @@
         out.textContent = fmt(a, f) + ' = ' + fmt(v, t);
       };
       var fail = function () { out.textContent = "Live rates are unavailable right now. Message us on WhatsApp for today's rate."; };
-      Promise.all([
-        fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
-        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
-      ]).then(function (res) {
-        var fx = res[0];
-        if (!fx || fx.result !== 'success') return fail();
-        rates = fx.rates;
+      var API = (document.querySelector('meta[name="api-base"]') || {}).content || '';
+      var applyRates = function (fx, btcUsd) {
+        if (!fx) return fail();
+        rates = fx;
         rates.USDT = 1;
-        if (res[1]) {
-          var spot = parseFloat(res[1].data.amount);
-          if (spot > 0) rates.BTC = 1 / spot;
-        }
+        if (btcUsd && btcUsd > 0) rates.BTC = 1 / btcUsd;
         if (!rates.BTC) {
           selF.querySelector('option[value=BTC]').disabled = true;
           selT.querySelector('option[value=BTC]').disabled = true;
         }
         render();
-      }).catch(fail);
+      };
+      var directLoad = function () {
+        Promise.all([
+          fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
+          fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
+        ]).then(function (res) {
+          var fx = res[0];
+          if (!fx || fx.result !== 'success') return fail();
+          applyRates(fx.rates, res[1] && res[1].data ? parseFloat(res[1].data.amount) : 0);
+        }).catch(fail);
+      };
+      // Desk's cached market endpoint first (one fast call), else direct APIs.
+      if (API) {
+        fetch(API + '/api/market').then(function (r) { return r.json(); })
+          .then(function (m) { if (m && m.fx) applyRates(m.fx, m.btc_usd || 0); else directLoad(); })
+          .catch(directLoad);
+      } else { directLoad(); }
       [amt, selF, selT].forEach(function (el) { el.addEventListener('input', render); });
       document.getElementById('cv-swap').addEventListener('click', function () {
         var f = selF.value; selF.value = selT.value; selT.value = f; render();
@@ -139,6 +151,7 @@
 <p>The global price doesn't include the real cost of converting XAF and crypto in Cameroon: liquidity, payment fees, operations. Our margin is fair, and it's public, so you can always compare.</p>
 <p><a href="https://wa.me/237673259112?text=Hi!%20I%27d%20like%20to%20lock%20today%27s%20rate." target="_blank" rel="noopener">💬 Lock This Rate</a></p>
   </article>
+  
 </main>
 <footer class="footer">
   <div class="footer-grid"><div><h3>Trade</h3><ul><li><a href="/buy-bitcoin-cameroon/">Buy & sell Bitcoin</a></li><li><a href="/buy-usdt-cameroon/">Buy & sell USDT</a></li><li><a href="/naira-to-cfa-cameroon/">Naira to FCFA</a></li><li><a href="/sell-gift-cards-cameroon/">Sell gift cards</a></li><li><a href="/rates/">Today's rates</a></li></ul></div><div><h3>Payments & travel</h3><ul><li><a href="/pay-china-suppliers/">Pay China suppliers</a></li><li><a href="/pay-school-fees-abroad/">School fees abroad</a></li><li><a href="/book-flights/">Book flights</a></li></ul></div><div><h3>Learn & safety</h3><ul><li><a href="/safety/">Bitcoin scams guide</a></li><li><a href="/momo-scams-cameroon/">MoMo scam guide</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/free-bitcoin-mentorship-cameroon/">1-on-1 mentorship</a></li></ul></div><div><h3>DerilBTC</h3><ul><li><a href="/about/">About us</a></li><li><a href="/refer/">Refer & earn</a></li></ul></div></div>

@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1330">
 <meta name="color-scheme" content="dark">
+<meta name="api-base" content="https://team.derilbtc.com">
+<link rel="preconnect" href="https://team.derilbtc.com" crossorigin>
 <link rel="preconnect" href="https://api.coingecko.com" crossorigin>
 <link rel="preconnect" href="https://open.er-api.com" crossorigin>
 <link rel="preconnect" href="https://api.coinbase.com" crossorigin>
@@ -61,6 +63,29 @@
 <h2>Comment Ça Marche</h2>
 <p><a href="https://wa.me/237673259112?text=Bonjour!%20Question%20sur%20la%20r%C3%A9servation%20d%27un%20vol." target="_blank" rel="noopener">💬 Voyage urgent? Écrivez-nous</a></p>
   </article>
+  
+  <section class="lead" id="order">
+    <div class="lead-card" data-reveal>
+      <h2>Commencer votre commande</h2>
+      <p class="lead-lead">Envoyez vos coordonnees au bureau et nous vous ecrirons sur WhatsApp avec un taux verrouille, generalement en quelques minutes aux heures ouvrables.</p>
+      <form class="lead-form" data-service="Réservez Votre Vol International depuis le Cameroun" data-lang="fr"
+            data-ok="C&#x27;est note. Nous avons bien recu votre demande et vous ecrirons sur WhatsApp sous peu." data-err="Une erreur s&#x27;est produite. Reessayez ou ecrivez-nous sur WhatsApp." data-sending="Envoi...">
+        <div class="lead-grid">
+          <label>Votre nom<input name="name" required autocomplete="name"></label>
+          <label>Numero WhatsApp<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
+          <label>Email (facultatif)<input name="email" type="email" autocomplete="email"></label>
+          <label>Montant / ce que vous voulez<input name="amount" placeholder="ex. acheter 100 000 XAF d'USDT"></label>
+        </div>
+        <label class="lead-full">Autre chose ? (facultatif)<textarea name="message" rows="2"></textarea></label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+        <div class="lead-actions">
+          <button class="btn" type="submit">Envoyer ma demande</button>
+          <span class="lead-or">ou <a href="https://wa.me/237673259112?text=Bonjour%20DerilBTC%21%20Je%20veux%20trader." target="_blank" rel="noopener">discuter sur WhatsApp maintenant</a></span>
+        </div>
+        <p class="lead-msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
 </main>
 <footer class="footer">
   <div class="footer-grid"><div><h3>Trader</h3><ul><li><a href="/fr/acheter-bitcoin-cameroun/">Acheter du Bitcoin</a></li><li><a href="/fr/acheter-usdt-cameroun/">Acheter de l'USDT</a></li><li><a href="/fr/naira-en-fcfa-cameroun/">Naira en FCFA</a></li><li><a href="/fr/vendre-cartes-cadeaux-cameroun/">Vendre des cartes-cadeaux</a></li><li><a href="/fr/taux/">Taux du jour</a></li></ul></div><div><h3>Paiements & voyage</h3><ul><li><a href="/fr/payer-fournisseur-chine/">Payer un fournisseur en Chine</a></li><li><a href="/fr/frais-de-scolarite-etranger/">Frais de scolarité</a></li><li><a href="/fr/reserver-vol/">Réserver un vol</a></li></ul></div><div><h3>Guides & sécurité</h3><ul><li><a href="/fr/securite/">Arnaques Bitcoin</a></li><li><a href="/fr/arnaques-momo-cameroun/">Arnaques MoMo</a></li><li><a href="/fr/faq-2/">FAQ</a></li><li><a href="/fr/mentorat-bitcoin-cameroun/">Mentorat 1-à-1</a></li></ul></div><div><h3>DerilBTC</h3><ul><li><a href="/fr/a-propos/">À propos</a></li><li><a href="/fr/referer/">Parrainer & gagner</a></li></ul></div></div>

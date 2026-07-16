@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1330">
 <meta name="color-scheme" content="dark">
+<meta name="api-base" content="https://team.derilbtc.com">
+<link rel="preconnect" href="https://team.derilbtc.com" crossorigin>
 <link rel="preconnect" href="https://api.coingecko.com" crossorigin>
 <link rel="preconnect" href="https://open.er-api.com" crossorigin>
 <link rel="preconnect" href="https://api.coinbase.com" crossorigin>
@@ -228,24 +230,34 @@
         out.textContent = fmt(a, f) + ' = ' + fmt(v, t);
       };
       var fail = function () { out.textContent = "Live rates are unavailable right now. Message us on WhatsApp for today's rate."; };
-      Promise.all([
-        fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
-        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
-      ]).then(function (res) {
-        var fx = res[0];
-        if (!fx || fx.result !== 'success') return fail();
-        rates = fx.rates;
+      var API = (document.querySelector('meta[name="api-base"]') || {}).content || '';
+      var applyRates = function (fx, btcUsd) {
+        if (!fx) return fail();
+        rates = fx;
         rates.USDT = 1;
-        if (res[1]) {
-          var spot = parseFloat(res[1].data.amount);
-          if (spot > 0) rates.BTC = 1 / spot;
-        }
+        if (btcUsd && btcUsd > 0) rates.BTC = 1 / btcUsd;
         if (!rates.BTC) {
           selF.querySelector('option[value=BTC]').disabled = true;
           selT.querySelector('option[value=BTC]').disabled = true;
         }
         render();
-      }).catch(fail);
+      };
+      var directLoad = function () {
+        Promise.all([
+          fetch('https://open.er-api.com/v6/latest/USD').then(function (r) { return r.json(); }),
+          fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.json(); }).catch(function () { return null; })
+        ]).then(function (res) {
+          var fx = res[0];
+          if (!fx || fx.result !== 'success') return fail();
+          applyRates(fx.rates, res[1] && res[1].data ? parseFloat(res[1].data.amount) : 0);
+        }).catch(fail);
+      };
+      // Desk's cached market endpoint first (one fast call), else direct APIs.
+      if (API) {
+        fetch(API + '/api/market').then(function (r) { return r.json(); })
+          .then(function (m) { if (m && m.fx) applyRates(m.fx, m.btc_usd || 0); else directLoad(); })
+          .catch(directLoad);
+      } else { directLoad(); }
       [amt, selF, selT].forEach(function (el) { el.addEventListener('input', render); });
       document.getElementById('cv-swap').addEventListener('click', function () {
         var f = selF.value; selF.value = selT.value; selT.value = f; render();
@@ -281,6 +293,30 @@
       <button class="btn" type="submit">Subscribe</button>
     </form>
     <p id="nl-msg" role="status"></p>
+  </section>
+
+  
+  <section class="lead" id="order">
+    <div class="lead-card" data-reveal>
+      <h2>Start your order</h2>
+      <p class="lead-lead">Send the desk your details and we'll message you on WhatsApp with a locked rate, usually within minutes during working hours.</p>
+      <form class="lead-form" data-service="Homepage enquiry" data-lang="en"
+            data-ok="Got it. We&#x27;ve received your request and will message you on WhatsApp shortly." data-err="Something went wrong. Please try again, or message us on WhatsApp." data-sending="Sending...">
+        <div class="lead-grid">
+          <label>Your name<input name="name" required autocomplete="name"></label>
+          <label>WhatsApp number<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
+          <label>Email (optional)<input name="email" type="email" autocomplete="email"></label>
+          <label>Amount / what you want<input name="amount" placeholder="e.g. buy 100,000 XAF of USDT"></label>
+        </div>
+        <label class="lead-full">Anything else? (optional)<textarea name="message" rows="2"></textarea></label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+        <div class="lead-actions">
+          <button class="btn" type="submit">Send my request</button>
+          <span class="lead-or">or <a href="https://wa.me/237673259112?text=Hi%20DerilBTC%21%20I%20want%20to%20trade." target="_blank" rel="noopener">chat on WhatsApp now</a></span>
+        </div>
+        <p class="lead-msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   </section>
 
   <section class="cta-band">

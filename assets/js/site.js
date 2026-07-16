@@ -3,8 +3,20 @@
 (function () {
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var FR = document.documentElement.lang === "fr";
-  var ADMIN = (document.querySelector(".our-rates") || {}).dataset
-    ? document.querySelector(".our-rates").dataset.admin : "";
+  var metaApi = document.querySelector('meta[name="api-base"]');
+  var API = ((metaApi && metaApi.content) || "").replace(/\/+$/, "");
+
+  // ── cookie-free pageview beacon (no personal data, first-party only) ─────
+  if (API && navigator.sendBeacon) {
+    try {
+      var hit = JSON.stringify({
+        path: location.pathname, ref: document.referrer || "",
+        lang: document.documentElement.lang || "",
+        device: window.innerWidth < 700 ? "mobile" : "desktop",
+      });
+      navigator.sendBeacon(API + "/api/hit", new Blob([hit], { type: "text/plain" }));
+    } catch (e) {}
+  }
 
   // ── hero mini ticker (BTC/USDT reference price) ─────────────────────────
   var tb = document.getElementById("t-btc");
@@ -18,26 +30,36 @@
     ["cardano", "ADA"], ["dogecoin", "DOGE"], ["tron", "TRX"], ["litecoin", "LTC"],
   ];
   if (track || (tb && tu)) {
-    var ids = COINS.map(function (c) { return c[0]; }).join(",");
-    fetch("https://api.coingecko.com/api/v3/simple/price?ids=" + ids + "&vs_currencies=usd&include_24hr_change=true")
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (tb && d.bitcoin) tb.textContent = "$" + Math.round(d.bitcoin.usd).toLocaleString("en-US");
-        if (tu && d.tether) tu.textContent = "$" + d.tether.usd.toFixed(2);
-        if (!track) return;
-        var items = COINS.map(function (c) {
-          var coin = d[c[0]];
-          if (!coin) return "";
-          var price = coin.usd >= 100 ? Math.round(coin.usd).toLocaleString("en-US") : coin.usd.toFixed(2);
-          var ch = coin.usd_24h_change || 0;
-          var cls = ch >= 0 ? "up" : "dn";
-          var arrow = ch >= 0 ? "▲" : "▼";
-          return '<span class="ci"><b>' + c[1] + "</b> $" + price +
-                 ' <i class="' + cls + '">' + arrow + " " + Math.abs(ch).toFixed(1) + "%</i></span>";
-        }).join("");
-        track.innerHTML = items + items; // duplicated for a seamless loop
-        track.classList.add("run");
-      })
+    var renderCoins = function (d) {
+      if (!d) throw new Error("no data");
+      if (tb && d.bitcoin) tb.textContent = "$" + Math.round(d.bitcoin.usd).toLocaleString("en-US");
+      if (tu && d.tether) tu.textContent = "$" + d.tether.usd.toFixed(2);
+      if (!track) return;
+      var items = COINS.map(function (c) {
+        var coin = d[c[0]];
+        if (!coin) return "";
+        var price = coin.usd >= 100 ? Math.round(coin.usd).toLocaleString("en-US") : coin.usd.toFixed(2);
+        var ch = coin.usd_24h_change || 0;
+        var cls = ch >= 0 ? "up" : "dn";
+        var arrow = ch >= 0 ? "▲" : "▼";
+        return '<span class="ci"><b>' + c[1] + "</b> $" + price +
+               ' <i class="' + cls + '">' + arrow + " " + Math.abs(ch).toFixed(1) + "%</i></span>";
+      }).join("");
+      track.innerHTML = items + items; // duplicated for a seamless loop
+      track.classList.add("run");
+    };
+    var directCoins = function () {
+      var ids = COINS.map(function (c) { return c[0]; }).join(",");
+      return fetch("https://api.coingecko.com/api/v3/simple/price?ids=" + ids + "&vs_currencies=usd&include_24hr_change=true")
+        .then(function (r) { return r.json(); });
+    };
+    // Prefer the desk's cached market endpoint (fast, rate-limit-proof); fall
+    // back to CoinGecko directly if the portal is unreachable.
+    var viaApi = API
+      ? fetch(API + "/api/market").then(function (r) { return r.json(); }).then(function (m) { return m && m.coins ? m.coins : null; })
+      : Promise.resolve(null);
+    viaApi.then(function (coins) { return coins || directCoins(); })
+      .then(renderCoins)
       .catch(function () {
         if (tb) tb.textContent = FR ? "en direct sur WhatsApp" : "live on WhatsApp";
         if (tu) tu.textContent = "";
@@ -55,8 +77,8 @@
       document.querySelectorAll(".rate-tile b").forEach(function (b) { b.style.fontSize = "20px"; });
       document.querySelectorAll(".rate-tile small").forEach(function (s) { s.remove(); });
     };
-    if (ADMIN) {
-      fetch(ADMIN + "/api/rates")
+    if (API) {
+      fetch(API + "/api/rates")
         .then(function (r) { return r.json(); })
         .then(function (d) {
           if (!d.btc_buy_xaf) return fallback();
@@ -79,14 +101,14 @@
         msg.className = ok ? "ok" : "err";
         if (ok) form.reset();
       };
-      if (!ADMIN) {
-        // no backend yet: hand off to WhatsApp rates channel
+      if (!API) {
+        // no backend: hand off to WhatsApp rates channel
         window.open("https://wa.me/237673259112?text=" + encodeURIComponent(
           (FR ? "Bonjour! Je veux recevoir le taux du jour. Mon email: " : "Hi! I want the daily rate. My email: ") + email
         ), "_blank");
         return done(true);
       }
-      fetch(ADMIN + "/api/subscribe", {
+      fetch(API + "/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, lang: form.dataset.lang, website: form.website.value }),
@@ -96,6 +118,44 @@
         .catch(function () { done(false); });
     });
   }
+
+  // ── lead / order forms: post to the desk, fall back to WhatsApp ──────────
+  [].forEach.call(document.querySelectorAll(".lead-form"), function (lf) {
+    lf.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msg = lf.querySelector(".lead-msg");
+      var val = function (n) { var el = lf.elements[n]; return el ? (el.value || "").trim() : ""; };
+      if (val("website")) return; // honeypot
+      var name = val("name"), whatsapp = val("whatsapp");
+      if (!name || !whatsapp) { msg.textContent = lf.dataset.err; msg.className = "lead-msg err"; return; }
+      var payload = {
+        type: "quote", name: name, whatsapp: whatsapp, email: val("email"),
+        amount: val("amount"), message: val("message"),
+        service: lf.dataset.service || "", page: location.pathname,
+        lang: lf.dataset.lang || (FR ? "fr" : "en"), website: "",
+      };
+      var okMsg = function () { msg.textContent = lf.dataset.ok; msg.className = "lead-msg ok"; lf.reset(); };
+      if (!API) { // no backend: hand off to WhatsApp with the details prefilled
+        var text = (FR ? "Bonjour DerilBTC! " : "Hi DerilBTC! ") + name + " - " +
+          (payload.service ? payload.service + " - " : "") + (payload.amount || "") +
+          (payload.message ? " - " + payload.message : "");
+        window.open("https://wa.me/237673259112?text=" + encodeURIComponent(text), "_blank");
+        return okMsg();
+      }
+      lf.classList.add("busy");
+      msg.textContent = lf.dataset.sending; msg.className = "lead-msg";
+      fetch(API + "/api/leads", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          lf.classList.remove("busy");
+          if (d && d.ok) okMsg();
+          else { msg.textContent = lf.dataset.err; msg.className = "lead-msg err"; }
+        })
+        .catch(function () { lf.classList.remove("busy"); msg.textContent = lf.dataset.err; msg.className = "lead-msg err"; });
+    });
+  });
 
   // ── GSAP: reveals + the pinned "scroll stop" on the steps ────────────────
   if (reduce || typeof gsap === "undefined") return;
