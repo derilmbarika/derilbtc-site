@@ -106,17 +106,45 @@ UI = {
 
 # ── Elementor content extraction ────────────────────────────────────────────
 class Extract(HTMLParser):
-    """Walks rendered WP HTML, keeps meaningful blocks in document order."""
-    KEEP = {"h1", "h2", "h3", "h4", "p", "li", "td", "th", "blockquote"}
+    """Walks rendered WP HTML, keeps meaningful blocks in document order.
+    Handles prose (h1-h4/p/li/blockquote), standalone CTA buttons, inline
+    images, comparison tables, and native <details>/<summary> FAQ accordions."""
+    KEEP = {"h1", "h2", "h3", "h4", "p", "li", "blockquote"}
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.blocks, self._stack, self._buf = [], [], []
         self._href = None
         self._list_mode = None
+        self._table = None
+        self._faq = None
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        # comparison tables -> structured ["table", {head, rows}]
+        if tag == "table":
+            self._table = {"head": [], "rows": [], "row": None, "cell": None, "inhead": False}
+            return
+        if self._table is not None:
+            if tag == "thead": self._table["inhead"] = True
+            elif tag == "tbody": self._table["inhead"] = False
+            elif tag == "tr": self._table["row"] = []
+            elif tag in ("td", "th") and self._table["row"] is not None: self._table["cell"] = []
+            return
+        # FAQ accordions -> ["faq", (question, answer)]: native <details>/<summary>
+        # or the Elementor <div class="faq"><h3>Q</h3><p>A</p></div> pattern.
+        if tag == "details":
+            self._faq = {"q": [], "a": [], "inq": False, "close": "details", "qtag": "summary", "depth": 0}
+            return
+        if self._faq is None and tag == "div" and "faq" in (a.get("class", "") or "").split():
+            self._faq = {"q": [], "a": [], "inq": False, "close": "div", "qtag": "h3", "depth": 1}
+            return
+        if self._faq is not None:
+            if tag == self._faq["qtag"]:
+                self._faq["inq"] = True
+            elif self._faq["close"] == "div" and tag == "div":
+                self._faq["depth"] += 1
+            return
         if tag in ("ul", "ol"):
             self._list_mode = tag
             self.blocks.append([tag, []])
@@ -148,6 +176,39 @@ class Extract(HTMLParser):
                 self._buf = []
 
     def handle_endtag(self, tag):
+        if self._table is not None:
+            t = self._table
+            if tag in ("td", "th") and t["cell"] is not None:
+                t["row"].append(re.sub(r"\s+", " ", "".join(t["cell"])).strip())
+                t["cell"] = None
+            elif tag == "tr" and t["row"] is not None:
+                if t["inhead"]:
+                    t["head"] = t["row"]
+                elif any(c for c in t["row"]):
+                    t["rows"].append(t["row"])
+                t["row"] = None
+            elif tag == "table":
+                self._table = None
+                if t["rows"]:
+                    self.blocks.append(["table", {"head": t["head"], "rows": t["rows"]}])
+            return
+        if self._faq is not None:
+            f = self._faq
+            if tag == f["qtag"]:
+                f["inq"] = False
+            done = False
+            if f["close"] == "div" and tag == "div":
+                f["depth"] -= 1
+                done = f["depth"] == 0
+            elif f["close"] == "details" and tag == "details":
+                done = True
+            if done:
+                self._faq = None
+                q = re.sub(r"\s+", " ", "".join(f["q"])).strip().strip("+-").strip()
+                ans = re.sub(r"\s+", " ", "".join(f["a"])).strip()
+                if q and ans:
+                    self.blocks.append(["faq", (q, ans)])
+            return
         if not self._stack:
             return
         if tag == "a" and getattr(self, "_open_a", False):
@@ -164,12 +225,17 @@ class Extract(HTMLParser):
                 self.blocks[-1][1].append(text)
             elif cur == "btn":
                 self.blocks.append(["btn", (getattr(self, "_pending_btn", WA), text)])
-            elif cur in ("td", "th"):
-                pass  # tables flattened out; rates live in the ticker now
             else:
                 self.blocks.append([cur, text])
 
     def handle_data(self, data):
+        if self._table is not None:
+            if self._table["cell"] is not None:
+                self._table["cell"].append(data)
+            return
+        if self._faq is not None:
+            (self._faq["q"] if self._faq["inq"] else self._faq["a"]).append(data)
+            return
         if self._stack:
             self._buf.append(data)
 
@@ -192,7 +258,48 @@ def extract(html_src: str):
         if key != seen_prev:
             out.append(b)
         seen_prev = key
-    return [b for b in out if not _is_widget_artifact(b)]
+    out = [b for b in out if not _is_widget_artifact(b)]
+    return _fold_q_headings(_strip_empty_headings(out))
+
+
+def _fold_q_headings(blocks):
+    """Turn 'Q: ...' heading + following answer paragraph(s) into FAQ accordions,
+    so heading-style FAQs match the <details>/<div class=faq> ones site-wide."""
+    out, i, n = [], 0, len(blocks)
+    while i < n:
+        b = blocks[i]
+        m = re.match(r"^\s*Q\s*[:.\-)]\s*(.+)", b[1], re.I) if b[0] in _HLEVEL and isinstance(b[1], str) else None
+        if m:
+            q = m.group(1).strip()
+            ans, j = [], i + 1
+            while j < n and blocks[j][0] in ("p", "ul", "ol", "blockquote"):
+                bb = blocks[j]
+                ans.append(" ".join(bb[1]) if bb[0] in ("ul", "ol") else re.sub(r"<[^>]+>", "", bb[1]))
+                j += 1
+            if ans:
+                a = re.sub(r"^\s*A\s*[:.\-)]\s*", "", " ".join(ans).strip(), flags=re.I)
+                out.append(["faq", (q, a)])
+                i = j
+                continue
+        out.append(b)
+        i += 1
+    return out
+
+
+_HLEVEL = {"h1": 1, "h2": 2, "h3": 3, "h4": 4}
+
+def _strip_empty_headings(blocks):
+    """Drop any heading with no content under it (immediately followed by a
+    same-or-higher-level heading, or the end). Catches sections whose body was
+    a widget/table/embed that didn't survive extraction."""
+    out = []
+    for i, b in enumerate(blocks):
+        if b[0] in _HLEVEL:
+            nxt = blocks[i + 1] if i + 1 < len(blocks) else None
+            if nxt is None or (nxt[0] in _HLEVEL and _HLEVEL[nxt[0]] <= _HLEVEL[b[0]]):
+                continue  # orphaned heading, drop it
+        out.append(b)
+    return out
 
 
 # Copy that belonged to the old page's embedded form / JS price-converter
@@ -381,6 +488,14 @@ def render_blocks(blocks, lang):
         elif kind == "img":
             src, alt = b[1]
             out.append('<figure class="prose-img">' + picture(src, alt, 'loading="lazy"') + '</figure>')
+        elif kind == "table":
+            head, rows = b[1]["head"], b[1]["rows"]
+            thead = ("<thead><tr>" + "".join(f"<th>{H.escape(c)}</th>" for c in head) + "</tr></thead>") if head else ""
+            body = "<tbody>" + "".join("<tr>" + "".join(f"<td>{H.escape(c)}</td>" for c in r) + "</tr>" for r in rows) + "</tbody>"
+            out.append(f'<div class="cmp-wrap"><table class="cmp">{thead}{body}</table></div>')
+        elif kind == "faq":
+            q, ans = b[1]
+            out.append(f'<details class="faq-item"><summary>{H.escape(q)}</summary><div class="faq-a">{H.escape(ans)}</div></details>')
     return "\n".join(out)
 
 
@@ -410,9 +525,15 @@ def page_html(slug, page, lang):
                                             "naira-en-fcfa-cameroun", "buy-usdt-cameroon",
                                             "acheter-usdt-cameroun") else ""
     extra_head = ""
-    # FAQPage schema, paired from the FAQ page's own headings + answers
+    # FAQPage schema. Prefer real <details> accordion items (service pages);
+    # fall back to heading+answer pairing on the dedicated FAQ pages.
     faq_nodes = None
-    if slug in ("faq", "faq-2"):
+    faq_pairs = [b[1] for b in blocks if b[0] == "faq"]
+    if faq_pairs:
+        faq_nodes = [{"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq_pairs]}]
+    elif slug in ("faq", "faq-2"):
         qa, q, ans = [], None, []
         strip = lambda s: re.sub(r"<[^>]+>", "", s).strip()
         for b in blocks:

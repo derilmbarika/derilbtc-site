@@ -455,3 +455,20 @@ main section h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); letter-spacing: -0.02em
 /* ── inline content images (mentorship founder photos) ── */
 .prose-img { margin: 24px 0; }
 .prose-img img { width: 100%; height: auto; border-radius: var(--r-card); border: 1px solid var(--line); }
+
+/* ── comparison tables (restored from the source) ── */
+.cmp-wrap { overflow-x: auto; margin: 22px 0 28px; border: 1px solid var(--line); border-radius: var(--r-card); }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 440px; }
+table.cmp th, table.cmp td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+table.cmp thead th { color: var(--text); font-weight: 700; background: rgba(232, 184, 75, .08); border-bottom: 1px solid rgba(232, 184, 75, .3); }
+table.cmp tbody td:first-child, table.cmp thead th:first-child { color: var(--text); font-weight: 600; }
+table.cmp tbody tr:last-child td { border-bottom: 0; }
+table.cmp tbody tr:nth-child(even) { background: rgba(148, 176, 255, .03); }
+
+/* ── FAQ accordions (restored from <details>/<summary>) ── */
+.prose .faq-item { border: 1px solid var(--line); border-radius: 12px; margin: 10px 0; background: rgba(15, 27, 64, .5); overflow: hidden; }
+.prose .faq-item summary { cursor: pointer; padding: 16px 46px 16px 18px; font-weight: 600; color: var(--text); list-style: none; position: relative; }
+.prose .faq-item summary::-webkit-details-marker { display: none; }
+.prose .faq-item summary::after { content: "+"; position: absolute; right: 18px; top: 14px; color: var(--gold); font-size: 22px; line-height: 1; }
+.prose .faq-item[open] summary::after { content: "\2212"; }
+.prose .faq-item .faq-a { padding: 0 18px 16px; color: #c6cde8; }
