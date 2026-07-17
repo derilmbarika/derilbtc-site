@@ -167,6 +167,15 @@
     });
   });
 
+  // ── hide the floating WhatsApp button while an order form is on screen ────
+  var sticky = document.querySelector(".sticky-cta");
+  var leadSection = document.querySelector(".lead");
+  if (sticky && leadSection && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      sticky.classList.toggle("hide", entries[0].isIntersecting);
+    }, { rootMargin: "-25% 0px -25% 0px" }).observe(leadSection);
+  }
+
   // ── GSAP: reveals + the pinned "scroll stop" on the steps ────────────────
   if (reduce || typeof gsap === "undefined") return;
   gsap.registerPlugin(ScrollTrigger);
