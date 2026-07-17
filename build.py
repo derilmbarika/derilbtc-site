@@ -439,7 +439,7 @@ def page_html(slug, page, lang):
   <article class="prose" data-reveal>
     {render_blocks(blocks, lang)}
   </article>
-  {lead_form(lang, title) if slug in SERVICE_SLUGS else ""}
+  {lead_form(lang, slug) if slug in SLUG_SERVICE else ""}
 </main>"""
     return shell(lang, f"{title} | DerilBTC", desc, path_for(slug, lang), alt_path, body, extra_head=extra_head, extra_schema=faq_nodes, preload_img=f"/assets/img/{webp_of(hero_img)}")
 
@@ -722,55 +722,193 @@ def converter_html(lang):
   </section>"""
 
 
-# ── lead / order capture form (posts to the team portal, notifies admins) ────
-SERVICE_SLUGS = {
-    "buy-bitcoin-cameroon", "buy-usdt-cameroon", "pay-china-suppliers",
-    "pay-school-fees-abroad", "book-flights", "sell-gift-cards-cameroon",
-    "naira-to-cfa-cameroon",
-    "acheter-bitcoin-cameroun", "acheter-usdt-cameroun", "payer-fournisseur-chine",
-    "frais-de-scolarite-etranger", "reserver-vol", "vendre-cartes-cadeaux-cameroun",
-    "naira-en-fcfa-cameroun",
+# ── lead / order capture forms (service-specific, post to the team portal) ───
+# Each service page renders a form built for that job (a flight enquiry asks
+# from/to/dates; tuition asks country/school/amount; etc). Every field carries a
+# data-label so site.js can compose one clean, readable line for the admin inbox.
+
+# slug (EN + FR) -> service key. Pages not listed here get the general form.
+SLUG_SERVICE = {
+    "buy-bitcoin-cameroon": "bitcoin", "acheter-bitcoin-cameroun": "bitcoin",
+    "buy-usdt-cameroon": "usdt", "acheter-usdt-cameroun": "usdt",
+    "pay-china-suppliers": "china", "payer-fournisseur-chine": "china",
+    "pay-school-fees-abroad": "school", "frais-de-scolarite-etranger": "school",
+    "book-flights": "flights", "reserver-vol": "flights",
+    "sell-gift-cards-cameroon": "giftcards", "vendre-cartes-cadeaux-cameroun": "giftcards",
+    "naira-to-cfa-cameroon": "naira", "naira-en-fcfa-cameroun": "naira",
 }
 
-LEAD_COPY = {
-    "en": {"h": "Start your order", "p": "Send the desk your details and we'll message you on WhatsApp with a locked rate, usually within minutes during working hours.",
-            "name": "Your name", "wa": "WhatsApp number", "email": "Email (optional)",
-            "amount": "Amount / what you want", "amount_ph": "e.g. buy 100,000 XAF of USDT",
-            "msg": "Anything else? (optional)", "send": "Send my request", "or": "or",
-            "wa_cta": "chat on WhatsApp now", "sending": "Sending...",
+LEAD_UI = {
+    "en": {"name": "Your name", "wa": "WhatsApp number", "email": "Email (optional)",
+            "contact": "How we reach you", "note": "Anything else? (optional)",
+            "send": "Send my request", "sending": "Sending...", "or": "or",
+            "wa_cta": "chat on WhatsApp now", "choose": "Choose one",
             "ok": "Got it. We've received your request and will message you on WhatsApp shortly.",
-            "err": "Something went wrong. Please try again, or message us on WhatsApp."},
-    "fr": {"h": "Commencer votre commande", "p": "Envoyez vos coordonnees au bureau et nous vous ecrirons sur WhatsApp avec un taux verrouille, generalement en quelques minutes aux heures ouvrables.",
-            "name": "Votre nom", "wa": "Numero WhatsApp", "email": "Email (facultatif)",
-            "amount": "Montant / ce que vous voulez", "amount_ph": "ex. acheter 100 000 XAF d'USDT",
-            "msg": "Autre chose ? (facultatif)", "send": "Envoyer ma demande", "or": "ou",
-            "wa_cta": "discuter sur WhatsApp maintenant", "sending": "Envoi...",
+            "err": "Something went wrong. Please try again, or message us on WhatsApp.",
+            "trust": ["No account needed", "Reply on WhatsApp in minutes", "Your details stay private"]},
+    "fr": {"name": "Votre nom", "wa": "Numero WhatsApp", "email": "Email (facultatif)",
+            "contact": "Comment vous joindre", "note": "Autre chose ? (facultatif)",
+            "send": "Envoyer ma demande", "sending": "Envoi...", "or": "ou",
+            "wa_cta": "discuter sur WhatsApp", "choose": "Choisir",
             "ok": "C'est note. Nous avons bien recu votre demande et vous ecrirons sur WhatsApp sous peu.",
-            "err": "Une erreur s'est produite. Reessayez ou ecrivez-nous sur WhatsApp."},
+            "err": "Une erreur s'est produite. Reessayez ou ecrivez-nous sur WhatsApp.",
+            "trust": ["Sans compte", "Reponse WhatsApp en minutes", "Vos donnees restent privees"]},
 }
 
-def lead_form(lang, service_label):
-    t = LEAD_COPY[lang]
+def _f(name, ftype, en_label, fr_label, en_ph="", fr_ph="", opts=None, req=False):
+    return {"name": name, "type": ftype, "req": req,
+            "label": {"en": en_label, "fr": fr_label}, "ph": {"en": en_ph, "fr": fr_ph},
+            "opts": opts or []}
+
+def _opt(en, fr):
+    return {"en": en, "fr": fr}
+
+LEAD_SPEC = {
+    "bitcoin": {
+        "svc": {"en": "Buy/Sell Bitcoin", "fr": "Acheter/Vendre Bitcoin"},
+        "en": {"kick": "Bitcoin desk", "h": "Buy or sell Bitcoin", "p": "Tell us what you want to trade and how you'd like to be paid. We lock a fair public rate and confirm on WhatsApp."},
+        "fr": {"kick": "Bureau Bitcoin", "h": "Acheter ou vendre du Bitcoin", "p": "Dites-nous ce que vous voulez trader et comment etre paye. Nous bloquons un taux public equitable et confirmons sur WhatsApp."},
+        "fields": [
+            _f("direction", "select", "I want to", "Je veux", req=True,
+               opts=[_opt("Buy Bitcoin", "Acheter du Bitcoin"), _opt("Sell Bitcoin", "Vendre du Bitcoin")]),
+            _f("amount", "text", "Amount", "Montant", "e.g. 100,000 XAF or 0.01 BTC", "ex. 100 000 XAF ou 0,01 BTC", req=True),
+            _f("method", "select", "Payout / payment", "Paiement", req=True,
+               opts=[_opt("MTN MoMo", "MTN MoMo"), _opt("Orange Money", "Orange Money"), _opt("Bank transfer", "Virement bancaire")]),
+        ],
+    },
+    "usdt": {
+        "svc": {"en": "Buy/Sell USDT", "fr": "Acheter/Vendre USDT"},
+        "en": {"kick": "USDT desk", "h": "Buy or sell USDT", "p": "Hold or cash out dollars. Tell us the amount and payout method and we'll confirm today's rate on WhatsApp."},
+        "fr": {"kick": "Bureau USDT", "h": "Acheter ou vendre de l'USDT", "p": "Gardez ou encaissez des dollars. Indiquez le montant et le mode de paiement, nous confirmons le taux du jour sur WhatsApp."},
+        "fields": [
+            _f("direction", "select", "I want to", "Je veux", req=True,
+               opts=[_opt("Buy USDT", "Acheter de l'USDT"), _opt("Sell USDT", "Vendre de l'USDT")]),
+            _f("amount", "text", "Amount", "Montant", "e.g. 200 USDT or 120,000 XAF", "ex. 200 USDT ou 120 000 XAF", req=True),
+            _f("method", "select", "Payout / payment", "Paiement", req=True,
+               opts=[_opt("MTN MoMo", "MTN MoMo"), _opt("Orange Money", "Orange Money"), _opt("Bank transfer", "Virement bancaire")]),
+        ],
+    },
+    "china": {
+        "svc": {"en": "Pay China supplier", "fr": "Paiement fournisseur Chine"},
+        "en": {"kick": "China payments", "h": "Pay a supplier in China", "p": "Pay factories and 1688 / Alibaba suppliers in RMB. Tell us the amount and how the supplier takes payment."},
+        "fr": {"kick": "Paiements Chine", "h": "Payer un fournisseur en Chine", "p": "Payez usines et fournisseurs 1688 / Alibaba en RMB. Indiquez le montant et comment le fournisseur est paye."},
+        "fields": [
+            _f("amount", "text", "Amount to pay", "Montant a payer", "e.g. RMB 5,000 or $700", "ex. 5 000 RMB ou 700 $", req=True),
+            _f("channel", "select", "Pay via", "Payer via", req=True,
+               opts=[_opt("1688", "1688"), _opt("Alibaba", "Alibaba"), _opt("Alipay", "Alipay"), _opt("WeChat Pay", "WeChat Pay"), _opt("Bank (China)", "Banque (Chine)")]),
+            _f("supplier", "text", "Supplier / order", "Fournisseur / commande", "name, store or order link", "nom, boutique ou lien"),
+        ],
+    },
+    "school": {
+        "svc": {"en": "School fees abroad", "fr": "Frais de scolarite"},
+        "en": {"kick": "School fees", "h": "Pay tuition abroad", "p": "We pay tuition to schools abroad with proof of payment. Tell us where and how much."},
+        "fr": {"kick": "Frais de scolarite", "h": "Payer la scolarite a l'etranger", "p": "Nous payons la scolarite aux ecoles a l'etranger avec preuve de paiement. Indiquez le pays et le montant."},
+        "fields": [
+            _f("country", "select", "Country", "Pays", req=True,
+               opts=[_opt("Canada", "Canada"), _opt("USA", "USA"), _opt("United Kingdom", "Royaume-Uni"), _opt("France", "France"), _opt("China", "Chine"), _opt("Germany", "Allemagne"), _opt("Other", "Autre")]),
+            _f("school", "text", "School / university", "Ecole / universite", "e.g. University of Toronto", "ex. Universite de Toronto", req=True),
+            _f("amount", "text", "Tuition amount", "Montant des frais", "e.g. CAD 6,000", "ex. 6 000 CAD", req=True),
+        ],
+    },
+    "flights": {
+        "svc": {"en": "Book a flight", "fr": "Reserver un vol"},
+        "en": {"kick": "Flights", "h": "Book a flight, pay in XAF", "p": "Tell us the route and dates. We find and ticket the flight, you pay in francs. No card needed."},
+        "fr": {"kick": "Vols", "h": "Reserver un vol, payer en XAF", "p": "Indiquez le trajet et les dates. Nous trouvons et emettons le billet, vous payez en francs. Sans carte."},
+        "fields": [
+            _f("from_city", "text", "From", "Depart", "e.g. Douala", "ex. Douala", req=True),
+            _f("to_city", "text", "To", "Destination", "e.g. Paris", "ex. Paris", req=True),
+            _f("depart", "date", "Departure date", "Date de depart", req=True),
+            _f("return_date", "date", "Return (optional)", "Retour (facultatif)"),
+            _f("passengers", "select", "Passengers", "Passagers",
+               opts=[_opt("1", "1"), _opt("2", "2"), _opt("3", "3"), _opt("4+", "4+")]),
+            _f("cabin", "select", "Class", "Classe",
+               opts=[_opt("Economy", "Economie"), _opt("Premium / Business", "Premium / Affaires")]),
+        ],
+    },
+    "giftcards": {
+        "svc": {"en": "Sell gift cards", "fr": "Vendre cartes-cadeaux"},
+        "en": {"kick": "Gift cards", "h": "Sell a gift card for cash", "p": "Turn iTunes, Amazon, Steam and more into MoMo cash. Tell us the card and value for a quote."},
+        "fr": {"kick": "Cartes-cadeaux", "h": "Vendre une carte-cadeau", "p": "Transformez iTunes, Amazon, Steam et plus en cash MoMo. Indiquez la carte et la valeur pour un devis."},
+        "fields": [
+            _f("card", "select", "Card type", "Type de carte", req=True,
+               opts=[_opt("iTunes / Apple", "iTunes / Apple"), _opt("Amazon", "Amazon"), _opt("Steam", "Steam"), _opt("Google Play", "Google Play"), _opt("Razer Gold", "Razer Gold"), _opt("Other", "Autre")]),
+            _f("amount", "text", "Card value", "Valeur de la carte", "e.g. $100", "ex. 100 $", req=True),
+            _f("card_form", "select", "Card format", "Format", opts=[_opt("E-code", "E-code"), _opt("Physical card", "Carte physique")]),
+        ],
+    },
+    "naira": {
+        "svc": {"en": "Exchange Naira", "fr": "Echanger des Naira"},
+        "en": {"kick": "Naira exchange", "h": "Exchange Naira", "p": "Convert Naira to CFA, USD or USDT (or back) at a live rate. Tell us the direction and amount."},
+        "fr": {"kick": "Change Naira", "h": "Echanger des Naira", "p": "Convertissez Naira en CFA, USD ou USDT (ou l'inverse) a un taux en direct. Indiquez le sens et le montant."},
+        "fields": [
+            _f("direction", "select", "Convert", "Convertir", req=True,
+               opts=[_opt("Naira to CFA", "Naira vers CFA"), _opt("CFA to Naira", "CFA vers Naira"), _opt("Naira to USD", "Naira vers USD"), _opt("Naira to USDT", "Naira vers USDT")]),
+            _f("amount", "text", "Amount", "Montant", "e.g. 500,000 NGN", "ex. 500 000 NGN", req=True),
+            _f("method", "select", "Payout", "Paiement", req=True,
+               opts=[_opt("MTN MoMo", "MTN MoMo"), _opt("Orange Money", "Orange Money"), _opt("Bank (CFA)", "Banque (CFA)"), _opt("Nigerian account", "Compte nigerian")]),
+        ],
+    },
+    "general": {
+        "svc": {"en": "General enquiry", "fr": "Demande generale"},
+        "en": {"kick": "Get started", "h": "Tell the desk what you need", "p": "Pick a service, drop your details, and we'll message you on WhatsApp with a rate, usually within minutes."},
+        "fr": {"kick": "Commencer", "h": "Dites au bureau ce qu'il vous faut", "p": "Choisissez un service, laissez vos coordonnees, et nous vous ecrirons sur WhatsApp avec un taux, souvent en quelques minutes."},
+        "fields": [
+            _f("service", "select", "What do you need?", "De quoi avez-vous besoin ?", req=True,
+               opts=[_opt("Buy/Sell Bitcoin", "Acheter/Vendre Bitcoin"), _opt("Buy/Sell USDT", "Acheter/Vendre USDT"),
+                     _opt("Pay China supplier", "Payer fournisseur Chine"), _opt("School fees abroad", "Frais de scolarite"),
+                     _opt("Book a flight", "Reserver un vol"), _opt("Sell gift cards", "Vendre cartes-cadeaux"),
+                     _opt("Exchange Naira", "Echanger Naira"), _opt("Something else", "Autre chose")]),
+            _f("amount", "text", "Amount / details", "Montant / details", "e.g. buy 100,000 XAF of USDT", "ex. acheter 100 000 XAF d'USDT"),
+        ],
+    },
+}
+
+def _field_html(f, lang):
+    label = f["label"][lang]
+    dl = f' data-label="{H.escape(label, quote=True)}"'
+    req = " required" if f.get("req") else ""
+    if f["type"] == "select":
+        first = f'<option value="" disabled selected>{LEAD_UI[lang]["choose"]}</option>'
+        opts = "".join(f'<option value="{H.escape(o[lang], quote=True)}">{o[lang]}</option>' for o in f["opts"])
+        return f'<label>{label}<select name="{f["name"]}"{dl}{req}>{first}{opts}</select></label>'
+    ph = f.get("ph", {}).get(lang, "") or ""
+    itype = f["type"] if f["type"] in ("text", "email", "date", "tel", "number") else "text"
+    extra = ' inputmode="tel"' if f["type"] == "tel" else ""
+    return f'<label>{label}<input type="{itype}" name="{f["name"]}"{dl}{req} placeholder="{H.escape(ph, quote=True)}"{extra}></label>'
+
+def lead_form(lang, slug):
+    key = SLUG_SERVICE.get(slug, "general")
+    spec = LEAD_SPEC[key]
+    ui = LEAD_UI[lang]
+    c = spec[lang]
+    svc = spec["svc"][lang]
     wa = f"{WA}?text={'Hi%20DerilBTC%21%20I%20want%20to%20trade.' if lang == 'en' else 'Bonjour%20DerilBTC%21%20Je%20veux%20trader.'}"
+    svc_fields = "\n          ".join(_field_html(f, lang) for f in spec["fields"])
+    trust = "".join(f'<span class="lead-trust-i">{t}</span>' for t in ui["trust"])
     return f"""
   <section class="lead" id="order">
     <div class="lead-card" data-reveal>
-      <h2>{t['h']}</h2>
-      <p class="lead-lead">{t['p']}</p>
-      <form class="lead-form" data-service="{H.escape(service_label, quote=True)}" data-lang="{lang}"
-            data-ok="{H.escape(t['ok'], quote=True)}" data-err="{H.escape(t['err'], quote=True)}" data-sending="{H.escape(t['sending'], quote=True)}">
+      <span class="lead-kick">{c['kick']}</span>
+      <h2>{c['h']}</h2>
+      <p class="lead-lead">{c['p']}</p>
+      <form class="lead-form" data-service="{H.escape(svc, quote=True)}" data-lang="{lang}"
+            data-ok="{H.escape(ui['ok'], quote=True)}" data-err="{H.escape(ui['err'], quote=True)}" data-sending="{H.escape(ui['sending'], quote=True)}">
         <div class="lead-grid">
-          <label>{t['name']}<input name="name" required autocomplete="name"></label>
-          <label>{t['wa']}<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
-          <label>{t['email']}<input name="email" type="email" autocomplete="email"></label>
-          <label>{t['amount']}<input name="amount" placeholder="{t['amount_ph']}"></label>
+          {svc_fields}
         </div>
-        <label class="lead-full">{t['msg']}<textarea name="message" rows="2"></textarea></label>
+        <div class="lead-sep">{ui['contact']}</div>
+        <div class="lead-grid">
+          <label>{ui['name']}<input name="name" required autocomplete="name"></label>
+          <label>{ui['wa']}<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
+          <label class="lead-full">{ui['email']}<input name="email" type="email" autocomplete="email"></label>
+        </div>
+        <label class="lead-full lead-note">{ui['note']}<textarea name="message" rows="2"></textarea></label>
         <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
         <div class="lead-actions">
-          <button class="btn" type="submit">{t['send']}</button>
-          <span class="lead-or">{t['or']} <a href="{wa}" target="_blank" rel="noopener">{t['wa_cta']}</a></span>
+          <button class="btn" type="submit">{ui['send']}</button>
+          <span class="lead-or">{ui['or']} <a href="{wa}" target="_blank" rel="noopener">{ui['wa_cta']}</a></span>
         </div>
+        <div class="lead-trust">{trust}</div>
         <p class="lead-msg" role="status" aria-live="polite"></p>
       </form>
     </div>
@@ -900,7 +1038,7 @@ def home_html(lang):
     <p id="nl-msg" role="status"></p>
   </section>
 
-  {lead_form(lang, "Homepage enquiry" if lang == "en" else "Demande page d'accueil")}
+  {lead_form(lang, "home")}
 
   <section class="cta-band">
     <h2>{c['cta_h']}</h2>

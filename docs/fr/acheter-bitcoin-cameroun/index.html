@@ -127,22 +127,29 @@
   
   <section class="lead" id="order">
     <div class="lead-card" data-reveal>
-      <h2>Commencer votre commande</h2>
-      <p class="lead-lead">Envoyez vos coordonnees au bureau et nous vous ecrirons sur WhatsApp avec un taux verrouille, generalement en quelques minutes aux heures ouvrables.</p>
-      <form class="lead-form" data-service="Acheter Bitcoin au Cameroun" data-lang="fr"
+      <span class="lead-kick">Bureau Bitcoin</span>
+      <h2>Acheter ou vendre du Bitcoin</h2>
+      <p class="lead-lead">Dites-nous ce que vous voulez trader et comment etre paye. Nous bloquons un taux public equitable et confirmons sur WhatsApp.</p>
+      <form class="lead-form" data-service="Acheter/Vendre Bitcoin" data-lang="fr"
             data-ok="C&#x27;est note. Nous avons bien recu votre demande et vous ecrirons sur WhatsApp sous peu." data-err="Une erreur s&#x27;est produite. Reessayez ou ecrivez-nous sur WhatsApp." data-sending="Envoi...">
+        <div class="lead-grid">
+          <label>Je veux<select name="direction" data-label="Je veux" required><option value="" disabled selected>Choisir</option><option value="Acheter du Bitcoin">Acheter du Bitcoin</option><option value="Vendre du Bitcoin">Vendre du Bitcoin</option></select></label>
+          <label>Montant<input type="text" name="amount" data-label="Montant" required placeholder="ex. 100 000 XAF ou 0,01 BTC"></label>
+          <label>Paiement<select name="method" data-label="Paiement" required><option value="" disabled selected>Choisir</option><option value="MTN MoMo">MTN MoMo</option><option value="Orange Money">Orange Money</option><option value="Virement bancaire">Virement bancaire</option></select></label>
+        </div>
+        <div class="lead-sep">Comment vous joindre</div>
         <div class="lead-grid">
           <label>Votre nom<input name="name" required autocomplete="name"></label>
           <label>Numero WhatsApp<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
-          <label>Email (facultatif)<input name="email" type="email" autocomplete="email"></label>
-          <label>Montant / ce que vous voulez<input name="amount" placeholder="ex. acheter 100 000 XAF d'USDT"></label>
+          <label class="lead-full">Email (facultatif)<input name="email" type="email" autocomplete="email"></label>
         </div>
-        <label class="lead-full">Autre chose ? (facultatif)<textarea name="message" rows="2"></textarea></label>
+        <label class="lead-full lead-note">Autre chose ? (facultatif)<textarea name="message" rows="2"></textarea></label>
         <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
         <div class="lead-actions">
           <button class="btn" type="submit">Envoyer ma demande</button>
-          <span class="lead-or">ou <a href="https://wa.me/237673259112?text=Bonjour%20DerilBTC%21%20Je%20veux%20trader." target="_blank" rel="noopener">discuter sur WhatsApp maintenant</a></span>
+          <span class="lead-or">ou <a href="https://wa.me/237673259112?text=Bonjour%20DerilBTC%21%20Je%20veux%20trader." target="_blank" rel="noopener">discuter sur WhatsApp</a></span>
         </div>
+        <div class="lead-trust"><span class="lead-trust-i">Sans compte</span><span class="lead-trust-i">Reponse WhatsApp en minutes</span><span class="lead-trust-i">Vos donnees restent privees</span></div>
         <p class="lead-msg" role="status" aria-live="polite"></p>
       </form>
     </div>

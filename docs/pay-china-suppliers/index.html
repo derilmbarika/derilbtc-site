@@ -118,22 +118,29 @@
   
   <section class="lead" id="order">
     <div class="lead-card" data-reveal>
-      <h2>Start your order</h2>
-      <p class="lead-lead">Send the desk your details and we'll message you on WhatsApp with a locked rate, usually within minutes during working hours.</p>
-      <form class="lead-form" data-service="Pay Suppliers in China from Cameroon: Alipay, WeChat, 1688 &amp; RMB" data-lang="en"
+      <span class="lead-kick">China payments</span>
+      <h2>Pay a supplier in China</h2>
+      <p class="lead-lead">Pay factories and 1688 / Alibaba suppliers in RMB. Tell us the amount and how the supplier takes payment.</p>
+      <form class="lead-form" data-service="Pay China supplier" data-lang="en"
             data-ok="Got it. We&#x27;ve received your request and will message you on WhatsApp shortly." data-err="Something went wrong. Please try again, or message us on WhatsApp." data-sending="Sending...">
+        <div class="lead-grid">
+          <label>Amount to pay<input type="text" name="amount" data-label="Amount to pay" required placeholder="e.g. RMB 5,000 or $700"></label>
+          <label>Pay via<select name="channel" data-label="Pay via" required><option value="" disabled selected>Choose one</option><option value="1688">1688</option><option value="Alibaba">Alibaba</option><option value="Alipay">Alipay</option><option value="WeChat Pay">WeChat Pay</option><option value="Bank (China)">Bank (China)</option></select></label>
+          <label>Supplier / order<input type="text" name="supplier" data-label="Supplier / order" placeholder="name, store or order link"></label>
+        </div>
+        <div class="lead-sep">How we reach you</div>
         <div class="lead-grid">
           <label>Your name<input name="name" required autocomplete="name"></label>
           <label>WhatsApp number<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="+237 6.."></label>
-          <label>Email (optional)<input name="email" type="email" autocomplete="email"></label>
-          <label>Amount / what you want<input name="amount" placeholder="e.g. buy 100,000 XAF of USDT"></label>
+          <label class="lead-full">Email (optional)<input name="email" type="email" autocomplete="email"></label>
         </div>
-        <label class="lead-full">Anything else? (optional)<textarea name="message" rows="2"></textarea></label>
+        <label class="lead-full lead-note">Anything else? (optional)<textarea name="message" rows="2"></textarea></label>
         <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
         <div class="lead-actions">
           <button class="btn" type="submit">Send my request</button>
           <span class="lead-or">or <a href="https://wa.me/237673259112?text=Hi%20DerilBTC%21%20I%20want%20to%20trade." target="_blank" rel="noopener">chat on WhatsApp now</a></span>
         </div>
+        <div class="lead-trust"><span class="lead-trust-i">No account needed</span><span class="lead-trust-i">Reply on WhatsApp in minutes</span><span class="lead-trust-i">Your details stay private</span></div>
         <p class="lead-msg" role="status" aria-live="polite"></p>
       </form>
     </div>

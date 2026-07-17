@@ -128,10 +128,20 @@
       if (val("website")) return; // honeypot
       var name = val("name"), whatsapp = val("whatsapp");
       if (!name || !whatsapp) { msg.textContent = lf.dataset.err; msg.className = "lead-msg err"; return; }
+      // compose the service-specific answers into one readable line for the desk
+      var skip = { name: 1, whatsapp: 1, email: 1, website: 1, amount: 1, message: 1, service: 1 };
+      var details = [];
+      [].forEach.call(lf.elements, function (el) {
+        if (!el.name || !el.dataset || !el.dataset.label || skip[el.name]) return;
+        var v = (el.value || "").trim();
+        if (v) details.push(el.dataset.label + ": " + v);
+      });
+      var note = val("message");
+      if (note) details.push("Note: " + note);
       var payload = {
         type: "quote", name: name, whatsapp: whatsapp, email: val("email"),
-        amount: val("amount"), message: val("message"),
-        service: lf.dataset.service || "", page: location.pathname,
+        amount: val("amount"), message: details.join("  ·  "),
+        service: val("service") || lf.dataset.service || "", page: location.pathname,
         lang: lf.dataset.lang || (FR ? "fr" : "en"), website: "",
       };
       var okMsg = function () { msg.textContent = lf.dataset.ok; msg.className = "lead-msg ok"; lf.reset(); };

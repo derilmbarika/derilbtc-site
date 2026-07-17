@@ -395,29 +395,47 @@ main section h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); letter-spacing: -0.02em
 .stat span { color: var(--muted); font-size: 14px; }
 @media (max-width: 960px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* ── lead / order capture form ── */
-.lead { max-width: 1160px; margin: 0 auto; padding: clamp(40px, 7vw, 80px) clamp(18px, 4vw, 44px); }
+/* ── lead / order capture form (service-specific) ── */
+.lead { max-width: 780px; margin: 0 auto; padding: clamp(40px, 7vw, 80px) clamp(18px, 4vw, 44px); }
 .lead-card {
+  position: relative; overflow: hidden;
   background: linear-gradient(150deg, rgba(232, 184, 75, .10), rgba(74, 141, 240, .06));
   border: 1px solid rgba(232, 184, 75, .28); border-radius: 22px; padding: clamp(26px, 4vw, 44px);
 }
+.lead-kick { display: inline-block; color: var(--gold); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; margin-bottom: 10px; }
 .lead-card h2 { margin: 0 0 8px; }
-.lead-lead { color: var(--muted); max-width: 60ch; margin-bottom: 24px; }
+.lead-lead { color: var(--muted); max-width: 60ch; margin-bottom: 26px; }
 .lead-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.lead-form label { display: flex; flex-direction: column; gap: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: rgba(233, 238, 252, .62); }
-.lead-form .lead-full { margin-top: 14px; }
-.lead-form input, .lead-form textarea {
+.lead-grid .lead-full { grid-column: 1 / -1; }
+.lead-form label { display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; color: rgba(233, 238, 252, .62); }
+.lead-note { margin-top: 16px; }
+.lead-form input, .lead-form textarea, .lead-form select {
   background: rgba(10, 19, 48, .75); border: 1px solid rgba(74, 141, 240, .3); color: #e9eefc;
   border-radius: 12px; padding: 13px 14px; font: inherit; font-size: 16px; width: 100%; box-sizing: border-box;
   text-transform: none; letter-spacing: normal;
 }
+.lead-form select {
+  -webkit-appearance: none; appearance: none; padding-right: 40px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%234a8df0' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 12px;
+}
+.lead-form option { color: #0a1330; }
+.lead-form input[type="date"] { color-scheme: dark; }
 .lead-form textarea { resize: vertical; min-height: 58px; }
-.lead-form input:focus, .lead-form textarea:focus { outline: 2px solid var(--gold); border-color: transparent; }
+.lead-form input:focus, .lead-form textarea:focus, .lead-form select:focus { outline: 2px solid var(--gold); border-color: transparent; }
 .lead-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-.lead-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 20px; }
+.lead-sep { display: flex; align-items: center; gap: 12px; margin: 24px 0 4px; color: var(--muted); font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; }
+.lead-sep::before, .lead-sep::after { content: ""; height: 1px; background: var(--line); flex: 1; }
+.lead-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; }
 .lead-or { color: var(--muted); font-size: 14.5px; }
 .lead-or a { color: var(--blue); border-bottom: 1px solid transparent; transition: border-color .2s; }
 .lead-or a:hover { border-color: var(--blue); }
+.lead-trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 18px; }
+.lead-trust-i { color: var(--muted); font-size: 13px; display: inline-flex; align-items: center; gap: 7px; }
+.lead-trust-i::before {
+  content: ""; width: 15px; height: 15px; flex: 0 0 auto;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.4l3.2 3.2L13 4.8' stroke='%23e8b84b' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
 .lead-msg { min-height: 22px; margin-top: 14px; font-size: 14.5px; font-weight: 600; }
 .lead-msg.ok { color: #22c55e; }
 .lead-msg.err { color: #ef6b6b; }
