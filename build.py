@@ -27,6 +27,7 @@ ADMIN_URL = os.environ.get("ADMIN_URL", "")
 # EN slug -> FR slug (and the reverse is derived). Home pages handled apart.
 LANG_MAP = {
     "buy-bitcoin-cameroon": "acheter-bitcoin-cameroun",
+    "buy-bitcoin-momo-cameroon": "acheter-bitcoin-momo-cameroun",
     "buy-usdt-cameroon": "acheter-usdt-cameroun",
     "pay-china-suppliers": "payer-fournisseur-chine",
     "pay-school-fees-abroad": "frais-de-scolarite-etranger",
@@ -851,6 +852,7 @@ def converter_html(lang):
 # slug (EN + FR) -> service key. Pages not listed here get the general form.
 SLUG_SERVICE = {
     "buy-bitcoin-cameroon": "bitcoin", "acheter-bitcoin-cameroun": "bitcoin",
+    "buy-bitcoin-momo-cameroon": "bitcoin", "acheter-bitcoin-momo-cameroun": "bitcoin",
     "buy-usdt-cameroon": "usdt", "acheter-usdt-cameroun": "usdt",
     "pay-china-suppliers": "china", "payer-fournisseur-chine": "china",
     "pay-school-fees-abroad": "school", "frais-de-scolarite-etranger": "school",
