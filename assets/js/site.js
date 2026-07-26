@@ -283,3 +283,19 @@
     }
   });
 })();
+
+/* Blog: reading progress bar (post pages only). */
+(function () {
+  var bar = document.querySelector(".read-progress span");
+  var body = document.querySelector(".post-body");
+  if (!bar || !body) return;
+  function update() {
+    var r = body.getBoundingClientRect();
+    var total = r.height - window.innerHeight;
+    var done = Math.min(Math.max(-r.top, 0), Math.max(total, 1));
+    bar.style.width = (total > 0 ? (done / total) * 100 : 100) + "%";
+  }
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update, { passive: true });
+  update();
+})();

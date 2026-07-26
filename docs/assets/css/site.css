@@ -498,3 +498,49 @@ table.cmp tbody tr:nth-child(even) { background: rgba(148, 176, 255, .03); }
 .toc a:hover { color: var(--blue); }
 .author-box { background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: var(--r-card); padding: 20px 24px; margin-top: 44px; }
 .author-box p { margin: 0; color: #c6cde8; font-size: 0.95rem; }
+
+/* ── Blog v2: bilingual + reading experience ─────────────────────────── */
+.read-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 60; background: transparent; pointer-events: none; }
+.read-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--blue)); transition: width 0.08s linear; }
+.post-hero { padding-top: clamp(90px, 12vw, 140px); padding-bottom: clamp(46px, 6vw, 70px); }
+.post-hero h1 { max-width: 21ch; }
+.post-meta { display: inline-block; background: rgba(10, 19, 48, 0.55); border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px; backdrop-filter: blur(4px); }
+.post-lang { margin: 18px 0 4px; }
+.post-lang a { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(232, 184, 75, 0.5); color: var(--gold); border-radius: 999px; padding: 8px 18px; font-size: 0.92rem; font-weight: 600; text-decoration: none; transition: background 0.2s ease, transform 0.2s ease; }
+.post-lang a:hover { background: rgba(232, 184, 75, 0.12); transform: translateY(-1px); }
+.index-lang { text-align: center; margin-top: 20px; }
+/* comfortable long-form type: phones first, wider on desktop */
+.post-body { font-size: 1.05rem; line-height: 1.78; }
+.post-body p { color: #d2d8ee; margin: 0 0 20px; }
+.post-body li { color: #d2d8ee; margin: 0 0 10px; line-height: 1.7; }
+@media (min-width: 720px) { .post-body { font-size: 1.13rem; } }
+.post-body h2 { scroll-margin-top: 90px; margin: 54px 0 16px; padding-bottom: 10px; position: relative; }
+.post-body h2::after { content: ""; position: absolute; left: 0; bottom: 0; width: 56px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--gold), rgba(232, 184, 75, 0)); }
+.post-body h3 { scroll-margin-top: 90px; }
+.post-body > p:first-child::first-letter,
+.post-body > .post-lang + p::first-letter,
+.post-body > .toc + p::first-letter { float: left; font-size: 3.1em; line-height: 0.85; font-weight: 700; color: var(--gold); padding: 4px 10px 0 0; }
+.post-body blockquote { background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: var(--r-card); padding: 16px 20px; color: #d2d8ee; font-size: 1.02em; }
+.post-body a { text-decoration-color: rgba(74, 141, 240, 0.45); text-underline-offset: 3px; }
+.post-body a:hover { color: #7cabf5; }
+.post-body .cmp tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+details.toc { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-card); padding: 0; margin: 26px 0 14px; overflow: hidden; }
+details.toc summary { cursor: pointer; list-style: none; padding: 16px 22px; color: var(--gold); font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; position: relative; }
+details.toc summary::-webkit-details-marker { display: none; }
+details.toc summary::after { content: "+"; position: absolute; right: 20px; top: 12px; font-size: 20px; }
+details.toc[open] summary::after { content: "\2212"; }
+details.toc ol { margin: 0; padding: 0 22px 18px 40px; }
+details.toc li { margin: 6px 0; color: var(--muted); }
+details.toc a { color: #c6cde8; text-decoration: none; }
+details.toc a:hover { color: var(--blue); }
+@media (min-width: 720px) { details.toc ol { column-count: 2; column-gap: 34px; } }
+/* index cards: featured lead + hover polish */
+.post-card { position: relative; overflow: hidden; }
+.post-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--blue)); opacity: 0; transition: opacity 0.25s ease; }
+.post-card:hover::before { opacity: 1; }
+.post-card.featured { grid-column: 1 / -1; padding: 34px 30px; background: linear-gradient(135deg, var(--bg-2), var(--bg-3)); }
+.post-card.featured h3 { font-size: clamp(1.35rem, 2.6vw, 1.9rem); max-width: 26ch; }
+.post-card.featured .post-desc { font-size: 1.02rem; max-width: 62ch; }
+.post-hero { text-align: center; }
+.post-hero .post-kick { letter-spacing: 0.16em; }
+.post-body .post-lang { text-align: center; }

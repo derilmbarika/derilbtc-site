@@ -33,6 +33,29 @@ Supported markdown ONLY: `##` and `###` headings, paragraphs, `-` lists,
 `| tables |` with a `|---|` separator row. No HTML, no code fences, no
 nested lists, no images unless the asset already exists in `assets/img/`.
 
+## Bilingual: every post ships in EN AND FR (mandatory)
+
+- EN post: `content/blog/<slug>.md`. FR version: `content/blog/fr/<fr-slug>.md`
+  with an extra frontmatter line `en-slug: <slug>` naming its EN partner.
+  The build pairs them: hreflang both ways, a gold language pill on each
+  article, and the FR post renders under `/fr/blog/<fr-slug>/` with the FR
+  blog index at `/fr/blog/`.
+- The FR version is a faithful, natural translation (not word-for-word):
+  same structure, same table, same FAQ. Localize the title, description,
+  slug and keywords the way a Cameroonian francophone actually searches
+  ("acheter bitcoin cameroun", not a literal translation of the EN title).
+- FR internal links point to the FR pages: `/fr/taux/`, `/fr/securite/`,
+  `/fr/acheter-bitcoin-cameroun/`, `/fr/acheter-bitcoin-momo-cameroun/`,
+  `/fr/acheter-usdt-cameroun/`, `/fr/payer-fournisseur-chine/`,
+  `/fr/frais-de-scolarite-etranger/`, `/fr/reserver-vol/`,
+  `/fr/vendre-cartes-cadeaux-cameroun/`, `/fr/naira-en-fcfa-cameroun/`,
+  `/fr/arnaques-momo-cameroun/`, `/fr/referer/`,
+  `/fr/mentorat-bitcoin-cameroun/`, `/fr/a-propos/`, `/fr/faq-2/`, and FR
+  blog cross-links to `/fr/blog/<fr-slug>/`.
+- The FR FAQ section heading is `## Questions fréquentes` (the build also
+  accepts `## FAQ`).
+- Never publish the EN half without the FR half.
+
 ## Content quality bar (non-negotiable)
 
 1. **1,200-1,800 words** of substance. Never pad. If a topic honestly needs
@@ -94,8 +117,8 @@ nested lists, no images unless the asset already exists in `assets/img/`.
 ## Daily workflow
 
 1. Open `content/blog/CONTENT-PLAN.md`. Find today's row (and any earlier
-   rows still marked `pending`: catch up, max 3 posts per run, oldest first;
-   keep each post's planned `date:`).
+   rows still marked `pending`: catch up, max 2 topics per run since each
+   topic is an EN + FR pair, oldest first; keep each post's planned `date:`).
 2. **Trend check (every run, 5 minutes):** web-search current Bitcoin/crypto
    news. Only act on a trend if it has REAL value for Cameroonian readers:
    a major price move, a CEMAC/BEAC/Cameroon regulatory development, an

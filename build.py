@@ -70,8 +70,8 @@ def path_for(slug, lang):
     EN at /<slug>/, FR under /fr/<slug>/ (Polylang directory URLs)."""
     if slug in ("home", "", None):
         return "/"
-    if slug == "blog":  # EN-only blog lives at /blog/ for both languages
-        return "/blog/"
+    if slug == "blog":  # bilingual blog: /blog/ (EN) and /fr/blog/ (FR)
+        return "/fr/blog/" if lang == "fr" else "/blog/"
     prefix = "/fr" if lang == "fr" else ""
     return f"{prefix}/{slug}/"
 
@@ -1193,13 +1193,48 @@ def home_html(lang):
 # ── blog (daily SEO posts, EN, markdown in content/blog/*.md) ───────────────
 BLOG_DIR = ROOT / "content" / "blog"
 BLOG_HERO = "derilbtc-hero.jpg"
-_MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July",
-              "August", "September", "October", "November", "December"]
+_MONTHS = {
+    "en": ["January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December"],
+    "fr": ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
+           "août", "septembre", "octobre", "novembre", "décembre"],
+}
+
+BLOG_UI = {
+    "en": {
+        "kick": "DerilBTC Blog", "toc": "In this guide", "read": "min read",
+        "published": "Published", "updated": "Updated", "keep": "Keep reading",
+        "more": "Read the guide", "by": "by",
+        "index_h1": "Bitcoin &amp; money guides for Cameroon",
+        "index_title": "Blog: Bitcoin & Money Guides for Cameroon | DerilBTC",
+        "intro": ("Practical guides on Bitcoin, USDT, mobile money and cross-border payments "
+                  "in Cameroon, written from the DerilBTC desk's daily trading experience since 2018."),
+        "switch_post": "Lire ce guide en fran&ccedil;ais", "switch_index": "Lire le blog en fran&ccedil;ais",
+        "author": ('<strong>Written by Deril Mbarika</strong>, founder of DerilBTC, '
+                   "Cameroon's WhatsApp crypto desk since 2018. Every guide comes from real trades "
+                   'the desk handles daily on MoMo, Orange Money and bank. '
+                   '<a href="{wa}" target="_blank" rel="noopener">Message the desk</a> for a live quote.'),
+    },
+    "fr": {
+        "kick": "Blog DerilBTC", "toc": "Dans ce guide", "read": "min de lecture",
+        "published": "Publi&eacute; le", "updated": "Mis &agrave; jour le", "keep": "&Agrave; lire ensuite",
+        "more": "Lire le guide", "by": "par",
+        "index_h1": "Guides Bitcoin &amp; argent pour le Cameroun",
+        "index_title": "Blog : Guides Bitcoin & Argent pour le Cameroun | DerilBTC",
+        "intro": ("Des guides pratiques sur le Bitcoin, l'USDT, le mobile money et les paiements "
+                  "internationaux au Cameroun, &eacute;crits depuis le bureau DerilBTC qui trade chaque jour depuis 2018."),
+        "switch_post": "Read this guide in English", "switch_index": "Read the blog in English",
+        "author": ('<strong>&Eacute;crit par Deril Mbarika</strong>, fondateur de DerilBTC, '
+                   "le bureau crypto WhatsApp du Cameroun depuis 2018. Chaque guide vient de vraies "
+                   'transactions trait&eacute;es chaque jour via MoMo, Orange Money et banque. '
+                   '<a href="{wa}" target="_blank" rel="noopener">&Eacute;crivez au bureau</a> pour un taux en direct.'),
+    },
+}
 
 
-def fmt_date(iso):
+def fmt_date(iso, lang="en"):
     y, m, d = iso.split("-")
-    return f"{int(d)} {_MONTHS_EN[int(m) - 1]} {y}"
+    return f"{int(d)} {_MONTHS[lang][int(m) - 1]} {y}"
 
 
 def _fm_parse(text):
@@ -1216,7 +1251,10 @@ def _fm_parse(text):
 
 
 def _slugify(s):
-    s = re.sub(r"<[^>]+>", "", s)
+    import unicodedata
+    s = re.sub(r"<[^>]+>", "", H.unescape(s))
+    s = unicodedata.normalize("NFD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
     s = re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
     return s or "section"
 
@@ -1310,8 +1348,8 @@ def _extract_faq(blocks):
     while i < len(blocks):
         b = blocks[i]
         if b[0] == "h2":
-            head = strip(b[1]).lower()
-            in_faq = head.startswith("faq") or head.startswith("frequently")
+            head = strip(H.unescape(b[1])).lower()
+            in_faq = head.startswith(("faq", "frequently", "questions"))
             out.append(b)
             i += 1
             continue
@@ -1332,49 +1370,76 @@ def _extract_faq(blocks):
     return out
 
 
+def _load_post_file(f, lang):
+    meta, body = _fm_parse(f.read_text(encoding="utf-8"))
+    if not meta.get("title") or not meta.get("date"):
+        return None
+    body = scrub(body)
+    slug = meta.get("slug") or _slugify(meta["title"])
+    prefix = "/fr/blog/" if lang == "fr" else "/blog/"
+    return {
+        "slug": slug, "lang": lang,
+        "path": f"{prefix}{slug}/",
+        "title": scrub(meta["title"]),
+        "desc": scrub(meta.get("description", ""))[:158],
+        "date": meta["date"],
+        "updated": meta.get("updated", meta["date"]),
+        "keywords": meta.get("keywords", ""),
+        "en_slug": meta.get("en-slug") or meta.get("en_slug", ""),
+        "blocks": _extract_faq(md_to_blocks(body)),
+        "words": len(re.sub(r"[^\w\s']", " ", body).split()),
+        "alt": None,  # partner-language path, filled in below
+    }
+
+
 def load_posts():
+    """EN posts in content/blog/*.md, FR translations in content/blog/fr/*.md
+    (frontmatter `en-slug:` names the EN partner). Returns all posts with
+    cross-language pairing resolved."""
     posts = []
     if not BLOG_DIR.exists():
         return posts
     for f in sorted(BLOG_DIR.glob("*.md")):
         if f.stem.upper() in ("CONTENT-PLAN", "README"):
             continue
-        meta, body = _fm_parse(f.read_text(encoding="utf-8"))
-        if not meta.get("title") or not meta.get("date"):
-            continue
-        body = scrub(body)
-        slug = meta.get("slug") or _slugify(meta["title"])
-        posts.append({
-            "slug": slug,
-            "path": f"/blog/{slug}/",
-            "title": scrub(meta["title"]),
-            "desc": scrub(meta.get("description", ""))[:158],
-            "date": meta["date"],
-            "updated": meta.get("updated", meta["date"]),
-            "keywords": meta.get("keywords", ""),
-            "blocks": _extract_faq(md_to_blocks(body)),
-            "words": len(re.sub(r"[^\w\s']", " ", body).split()),
-        })
+        p = _load_post_file(f, "en")
+        if p:
+            posts.append(p)
+    fr_dir = BLOG_DIR / "fr"
+    if fr_dir.exists():
+        for f in sorted(fr_dir.glob("*.md")):
+            p = _load_post_file(f, "fr")
+            if p:
+                posts.append(p)
+    by_en_slug = {p["slug"]: p for p in posts if p["lang"] == "en"}
+    for p in posts:
+        if p["lang"] == "fr" and p["en_slug"] in by_en_slug:
+            partner = by_en_slug[p["en_slug"]]
+            p["alt"] = partner["path"]
+            partner["alt"] = p["path"]
     posts.sort(key=lambda p: (p["date"], p["slug"]), reverse=True)
     return posts
 
 
-def post_card(p):
+def post_card(p, featured=False):
+    ui = BLOG_UI[p["lang"]]
     mins = max(3, round(p["words"] / 200))
-    return (f'<a class="post-card" href="{p["path"]}">'
-            f'<p class="post-date">{fmt_date(p["date"])} &middot; {mins} min read</p>'
+    cls = "post-card featured" if featured else "post-card"
+    return (f'<a class="{cls}" href="{p["path"]}">'
+            f'<p class="post-date">{fmt_date(p["date"], p["lang"])} &middot; {mins} {ui["read"]}</p>'
             f'<h3>{H.escape(p["title"])}</h3>'
             f'<p class="post-desc">{H.escape(p["desc"])}</p>'
-            f'<span class="post-more">Read the guide &rarr;</span></a>')
+            f'<span class="post-more">{ui["more"]} &rarr;</span></a>')
 
 
-def _post_toc(blocks):
+def _post_toc(blocks, lang):
     hs = [b[1] for b in blocks if b[0] == "h2"]
     if len(hs) < 4:
         return ""
     strip = lambda x: re.sub(r"<[^>]+>", "", x)
     lis = "".join(f'<li><a href="#{_slugify(h)}">{strip(h)}</a></li>' for h in hs)
-    return f'<nav class="toc"><p>In this guide</p><ol>{lis}</ol></nav>'
+    return (f'<details class="toc" open><summary>{BLOG_UI[lang]["toc"]}</summary>'
+            f'<ol>{lis}</ol></details>')
 
 
 def _post_render(blocks, lang):
@@ -1388,24 +1453,31 @@ def _post_render(blocks, lang):
 
 
 def blog_post_html(post, posts):
+    lang, ui = post["lang"], BLOG_UI[post["lang"]]
     mins = max(3, round(post["words"] / 200))
     hero_style = (' style="background-image: linear-gradient(rgba(10,19,48,.82), '
                   f'rgba(10,19,48,.94)), url(/assets/img/{webp_of(BLOG_HERO)})"')
-    others = [p for p in posts if p["slug"] != post["slug"]][:3]
+    index_path = path_for("blog", lang)
+    others = [p for p in posts if p["lang"] == lang and p["slug"] != post["slug"]][:3]
     related = ""
     if others:
-        related = ('<section class="related"><h2>Keep reading</h2><div class="blog-grid">'
+        related = (f'<section class="related"><h2>{ui["keep"]}</h2><div class="blog-grid">'
                    + "".join(post_card(p) for p in others) + "</div></section>")
-    author = ('<div class="author-box"><p><strong>Written by Deril Mbarika</strong>, founder of DerilBTC, '
-              "Cameroon's WhatsApp crypto desk since 2018. Every guide comes from real trades the desk "
-              f'handles daily on MoMo, Orange Money and bank. <a href="{WA}" target="_blank" rel="noopener">'
-              "Message the desk</a> for a live quote.</p></div>")
+    author = '<div class="author-box"><p>' + ui["author"].format(wa=WA) + "</p></div>"
+    # prominent language toggle for the article itself
+    lang_pill = ""
+    if post["alt"]:
+        lang_pill = (f'<p class="post-lang"><a href="{post["alt"]}">'
+                     f'&#127760; {ui["switch_post"]} &rarr;</a></p>')
+    updated_bit = ""
+    if post["updated"] != post["date"]:
+        updated_bit = f' &middot; {ui["updated"]} {fmt_date(post["updated"], lang)}'
     url = f"{SITE}{post['path']}"
     node = {
         "@type": "BlogPosting", "@id": f"{url}#post",
         "headline": post["title"], "description": post["desc"],
         "datePublished": post["date"], "dateModified": post["updated"],
-        "wordCount": post["words"], "inLanguage": "en",
+        "wordCount": post["words"], "inLanguage": lang,
         "author": {"@type": "Person", "name": "Deril Mbarika", "url": f"{SITE}/about/"},
         "publisher": {"@id": f"{SITE}/#org"},
         "mainEntityOfPage": url, "image": OG_IMAGE,
@@ -1419,48 +1491,56 @@ def blog_post_html(post, posts):
             {"@type": "Question", "name": q,
              "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq_pairs]})
     body = f"""
+<div class="read-progress" aria-hidden="true"><span></span></div>
 <main>
-  <section class="page-hero page-hero-img"{hero_style}>
-    <p class="post-kick"><a href="/blog/">DerilBTC Blog</a></p>
+  <section class="page-hero page-hero-img post-hero"{hero_style}>
+    <p class="post-kick"><a href="{index_path}">{ui['kick']}</a></p>
     <h1>{H.escape(post['title'])}</h1>
-    <p class="post-meta">Published {fmt_date(post['date'])}
-      {('&middot; Updated ' + fmt_date(post['updated'])) if post['updated'] != post['date'] else ''}
-      &middot; {mins} min read &middot; by Deril Mbarika</p>
+    <p class="post-meta">{ui['published']} {fmt_date(post['date'], lang)}{updated_bit}
+      &middot; {mins} {ui['read']} &middot; {ui['by']} Deril Mbarika</p>
   </section>
   <article class="prose post-body" data-reveal>
-    {_post_toc(post['blocks'])}
-    {_post_render(post['blocks'], 'en')}
+    {lang_pill}
+    {_post_toc(post['blocks'], lang)}
+    {_post_render(post['blocks'], lang)}
     {author}
   </article>
   {related}
 </main>"""
-    return shell("en", f"{post['title']} | DerilBTC", post["desc"], post["path"], None,
+    return shell(lang, f"{post['title']} | DerilBTC", post["desc"], post["path"], post["alt"],
                  body, extra_schema=nodes, og_type="article",
                  preload_img=f"/assets/img/{webp_of(BLOG_HERO)}")
 
 
-def blog_index_html(posts):
-    intro = ("Practical guides on Bitcoin, USDT, mobile money and cross-border payments in Cameroon, "
-             "written from the DerilBTC desk's daily trading experience since 2018.")
-    cards = "".join(post_card(p) for p in posts)
+def blog_index_html(posts, lang):
+    ui = BLOG_UI[lang]
+    mine = [p for p in posts if p["lang"] == lang]
+    other_index = path_for("blog", "fr" if lang == "en" else "en")
+    has_other = any(p["lang"] != lang for p in posts)
+    index_path = path_for("blog", lang)
+    cards = "".join(post_card(p, featured=(i == 0)) for i, p in enumerate(mine))
+    toggle = ""
+    if has_other:
+        toggle = (f'<p class="post-lang index-lang"><a href="{other_index}">'
+                  f'&#127760; {ui["switch_index"]} &rarr;</a></p>')
     blog_node = [{
-        "@type": "Blog", "@id": f"{SITE}/blog/#blog", "name": "DerilBTC Blog",
-        "url": f"{SITE}/blog/", "description": intro, "inLanguage": "en",
+        "@type": "Blog", "@id": f"{SITE}{index_path}#blog", "name": "DerilBTC Blog",
+        "url": f"{SITE}{index_path}", "description": H.unescape(ui["intro"]), "inLanguage": lang,
         "publisher": {"@id": f"{SITE}/#org"},
         "blogPost": [{"@type": "BlogPosting", "headline": p["title"],
                       "url": f"{SITE}{p['path']}", "datePublished": p["date"]}
-                     for p in posts[:20]],
+                     for p in mine[:20]],
     }]
     body = f"""
 <main>
   <section class="page-hero">
-    <h1>Bitcoin &amp; money guides for Cameroon</h1>
+    <h1>{ui['index_h1']}</h1>
   </section>
-  <article class="prose blog-intro"><p>{intro}</p></article>
+  <article class="prose blog-intro"><p>{ui['intro']}</p>{toggle}</article>
   <section class="blog-wrap"><div class="blog-grid">{cards}</div></section>
 </main>"""
-    return shell("en", "Blog: Bitcoin & Money Guides for Cameroon | DerilBTC", intro[:158],
-                 "/blog/", None, body, extra_schema=blog_node)
+    return shell(lang, ui["index_title"], H.unescape(ui["intro"])[:158],
+                 index_path, other_index if has_other else None, body, extra_schema=blog_node)
 
 
 def write(path, content):
@@ -1491,15 +1571,20 @@ def main():
         path = path_for(slug, page["lang"])
         paths.append(path)
         write(f"{path.lstrip('/')}index.html", page_html(slug, page, page["lang"])); n += 1
-    # blog: /blog/ index + one page per markdown post in content/blog/
+    # blog: /blog/ + /fr/blog/ indexes + one page per markdown post
     posts = load_posts()
     lastmods = {}
     if posts:
-        write("blog/index.html", blog_index_html(posts)); n += 1
-        paths.append("/blog/")
-        lastmods["/blog/"] = max(p["updated"] for p in posts)
+        for blog_lang in ("en", "fr"):
+            mine = [p for p in posts if p["lang"] == blog_lang]
+            if not mine:
+                continue
+            idx = path_for("blog", blog_lang)
+            write(f"{idx.lstrip('/')}index.html", blog_index_html(posts, blog_lang)); n += 1
+            paths.append(idx)
+            lastmods[idx] = max(p["updated"] for p in mine)
         for p in posts:
-            write(f"blog/{p['slug']}/index.html", blog_post_html(p, posts)); n += 1
+            write(f"{p['path'].lstrip('/')}index.html", blog_post_html(p, posts)); n += 1
             paths.append(p["path"])
             lastmods[p["path"]] = p["updated"]
     write("404.html", shell("en", "Page not found | DerilBTC",
