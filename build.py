@@ -70,6 +70,8 @@ def path_for(slug, lang):
     EN at /<slug>/, FR under /fr/<slug>/ (Polylang directory URLs)."""
     if slug in ("home", "", None):
         return "/"
+    if slug == "blog":  # EN-only blog lives at /blog/ for both languages
+        return "/blog/"
     prefix = "/fr" if lang == "fr" else ""
     return f"{prefix}/{slug}/"
 
@@ -90,10 +92,10 @@ for _fr_slug in FR_TO_EN:
 NAV = {
     "en": [("buy-bitcoin-cameroon", "Buy Bitcoin"), ("buy-usdt-cameroon", "USDT"),
             ("pay-china-suppliers", "China Payments"), ("rates", "Rates"),
-            ("faq", "FAQ"), ("about", "About")],
+            ("blog", "Blog"), ("faq", "FAQ"), ("about", "About")],
     "fr": [("acheter-bitcoin-cameroun", "Acheter Bitcoin"), ("acheter-usdt-cameroun", "USDT"),
             ("payer-fournisseur-chine", "Paiements Chine"), ("taux", "Taux"),
-            ("faq-2", "FAQ"), ("a-propos", "À propos")],
+            ("blog", "Blog"), ("faq-2", "FAQ"), ("a-propos", "À propos")],
 }
 
 UI = {
@@ -385,16 +387,27 @@ def render_schema(lang, canonical_url, title, desc, canonical_path, extra_nodes=
 
 
 # ── shared page shell ───────────────────────────────────────────────────────
-def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extra_schema=None, preload_img=None):
+def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extra_schema=None, preload_img=None, og_type="website"):
     ui = UI[lang]
     nav_links = "".join(
         f'<a href="{path_for(slug, lang)}">{label}</a>' for slug, label in NAV[lang])
     alt_lang = "fr" if lang == "en" else "en"
     canonical_url = f"{SITE}{canonical_path}"
-    en_url = canonical_path if lang == "en" else alt_path
+    en_url = canonical_path if lang == "en" else (alt_path or "/")
     og_locale = "en_US" if lang == "en" else "fr_FR"
     og_alt_locale = "fr_FR" if lang == "en" else "en_US"
     schema = render_schema(lang, canonical_url, title, desc, canonical_path, extra_schema)
+    # EN-only pages (the blog) pass alt_path=None: no FR alternate exists, so
+    # emit self-referencing hreflang only and keep the lang switcher useful.
+    if alt_path:
+        hreflang = (f'<link rel="alternate" hreflang="{alt_lang}" href="https://derilbtc.com{alt_path}">\n'
+                    f'<link rel="alternate" hreflang="{lang}" href="{canonical_url}">\n'
+                    f'<link rel="alternate" hreflang="x-default" href="https://derilbtc.com{en_url}">')
+        og_alt = f'\n<meta property="og:locale:alternate" content="{og_alt_locale}">'
+    else:
+        hreflang = f'<link rel="alternate" hreflang="{lang}" href="{canonical_url}">'
+        og_alt = ""
+    lang_href = alt_path or ("/fr/derilbtc-accueil/" if lang == "en" else "/")
     return f"""<!doctype html>
 <html lang="{lang}">
 <head>
@@ -412,16 +425,13 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extr
 <meta name="google-site-verification" content="T22mMmD3NnxkDC6WRAUSKON9KvQIw--y-BpNoCr0L20">
 {'<meta name="robots" content="noindex, nofollow">' if PREVIEW else '<meta name="robots" content="index, follow">'}
 <link rel="canonical" href="{canonical_url}">
-<link rel="alternate" hreflang="{alt_lang}" href="https://derilbtc.com{alt_path}">
-<link rel="alternate" hreflang="{lang}" href="{canonical_url}">
-<link rel="alternate" hreflang="x-default" href="https://derilbtc.com{en_url}">
+{hreflang}
 <meta property="og:title" content="{H.escape(title, quote=True)}">
 <meta property="og:description" content="{H.escape(desc, quote=True)}">
-<meta property="og:type" content="website">
+<meta property="og:type" content="{og_type}">
 <meta property="og:url" content="{canonical_url}">
 <meta property="og:site_name" content="DerilBTC">
-<meta property="og:locale" content="{og_locale}">
-<meta property="og:locale:alternate" content="{og_alt_locale}">
+<meta property="og:locale" content="{og_locale}">{og_alt}
 <meta property="og:image" content="{OG_IMAGE}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -445,7 +455,7 @@ def shell(lang, title, desc, canonical_path, alt_path, body, extra_head="", extr
   <nav class="nav-links" aria-label="Site">{nav_links}</nav>
   <div class="nav-side">
     {f'<a class="nav-login" href="{ADMIN_URL}/admin" target="_blank" rel="noopener">{ui["login"]}</a>' if ADMIN_URL else ''}
-    <a class="nav-lang" href="{alt_path}">{ui['switch']}</a>
+    <a class="nav-lang" href="{lang_href}">{ui['switch']}</a>
     <a class="nav-cta" href="{WA}" target="_blank" rel="noopener">{ui['cta']}</a>
   </div>
 </header>
@@ -628,7 +638,7 @@ FOOTER = {
                     ("rates", "Today's rates")]),
         ("Payments & travel", [("pay-china-suppliers", "Pay China suppliers"), ("pay-school-fees-abroad", "School fees abroad"),
                                 ("book-flights", "Book flights")]),
-        ("Learn & safety", [("safety", "Bitcoin scams guide"), ("momo-scams-cameroon", "MoMo scam guide"),
+        ("Learn & safety", [("blog", "Blog & guides"), ("safety", "Bitcoin scams guide"), ("momo-scams-cameroon", "MoMo scam guide"),
                              ("faq", "FAQ"), ("free-bitcoin-mentorship-cameroon", "1-on-1 mentorship")]),
         ("DerilBTC", [("about", "About us"), ("refer", "Refer & earn")]),
     ],
@@ -638,7 +648,7 @@ FOOTER = {
                      ("taux", "Taux du jour")]),
         ("Paiements & voyage", [("payer-fournisseur-chine", "Payer un fournisseur en Chine"), ("frais-de-scolarite-etranger", "Frais de scolarité"),
                                  ("reserver-vol", "Réserver un vol")]),
-        ("Guides & sécurité", [("securite", "Arnaques Bitcoin"), ("arnaques-momo-cameroun", "Arnaques MoMo"),
+        ("Guides & sécurité", [("blog", "Blog & guides"), ("securite", "Arnaques Bitcoin"), ("arnaques-momo-cameroun", "Arnaques MoMo"),
                                 ("faq-2", "FAQ"), ("mentorat-bitcoin-cameroun", "Mentorat 1-à-1")]),
         ("DerilBTC", [("a-propos", "À propos"), ("referer", "Parrainer & gagner")]),
     ],
@@ -1180,6 +1190,279 @@ def home_html(lang):
 
 
 # ── build ───────────────────────────────────────────────────────────────────
+# ── blog (daily SEO posts, EN, markdown in content/blog/*.md) ───────────────
+BLOG_DIR = ROOT / "content" / "blog"
+BLOG_HERO = "derilbtc-hero.jpg"
+_MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July",
+              "August", "September", "October", "November", "December"]
+
+
+def fmt_date(iso):
+    y, m, d = iso.split("-")
+    return f"{int(d)} {_MONTHS_EN[int(m) - 1]} {y}"
+
+
+def _fm_parse(text):
+    """Parse simple `key: value` frontmatter between --- fences."""
+    m = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.S)
+    meta, body = {}, text
+    if m:
+        for line in m.group(1).splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1)
+                meta[k.strip().lower()] = v.strip()
+        body = m.group(2)
+    return meta, body
+
+
+def _slugify(s):
+    s = re.sub(r"<[^>]+>", "", s)
+    s = re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+    return s or "section"
+
+
+def _md_inline(s):
+    """Inline markdown: links, bold, italic. External links open in a new tab
+    with rel=nofollow (blog policy: external sources are nofollow)."""
+    s = H.escape(s, quote=False)
+
+    def _link(m):
+        txt, href = m.group(1), m.group(2)
+        if href.startswith("http") and "derilbtc.com" not in href:
+            return f'<a href="{href}" target="_blank" rel="nofollow noopener">{txt}</a>'
+        return f'<a href="{href}">{txt}</a>'
+
+    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", _link, s)
+    s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+    s = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"<em>\1</em>", s)
+    return s
+
+
+def md_to_blocks(md):
+    """Tiny markdown -> block list matching render_blocks()' block shapes.
+    Supports: #/##/### headings, paragraphs, -/* and 1. lists, > quotes,
+    | tables |, ![img](src). Everything the blog rules allow."""
+    blocks, lines, i, para = [], md.splitlines(), 0, []
+
+    def flush():
+        if para:
+            blocks.append(("p", _md_inline(" ".join(para).strip())))
+            del para[:]
+
+    while i < len(lines):
+        s = lines[i].strip()
+        if not s:
+            flush()
+        elif s.startswith("### "):
+            flush(); blocks.append(("h3", _md_inline(s[4:])))
+        elif s.startswith("## "):
+            flush(); blocks.append(("h2", _md_inline(s[3:])))
+        elif s.startswith("# "):
+            flush(); blocks.append(("h1", _md_inline(s[2:])))
+        elif s.startswith("> "):
+            flush(); blocks.append(("blockquote", _md_inline(s[2:])))
+        elif s.startswith("!["):
+            flush()
+            m = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", s)
+            if m:
+                blocks.append(("img", (m.group(2), m.group(1))))
+        elif s.startswith("- ") or s.startswith("* "):
+            flush()
+            items = []
+            while i < len(lines) and (lines[i].strip().startswith("- ") or lines[i].strip().startswith("* ")):
+                items.append(_md_inline(lines[i].strip()[2:]))
+                i += 1
+            blocks.append(("ul", items))
+            continue
+        elif re.match(r"^\d+\.\s", s):
+            flush()
+            items = []
+            while i < len(lines) and re.match(r"^\d+\.\s", lines[i].strip()):
+                items.append(_md_inline(re.sub(r"^\d+\.\s+", "", lines[i].strip())))
+                i += 1
+            blocks.append(("ol", items))
+            continue
+        elif s.startswith("|"):
+            flush()
+            rows = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+                rows.append(cells)
+                i += 1
+            head, body_rows = [], rows
+            if len(rows) >= 2 and all(re.match(r"^:?-+:?$", c) for c in rows[1]):
+                head, body_rows = rows[0], rows[2:]
+            blocks.append(("table", {"head": head, "rows": body_rows}))
+            continue
+        else:
+            para.append(s)
+        i += 1
+    flush()
+    return blocks
+
+
+def _extract_faq(blocks):
+    """Inside a '## FAQ...' section, turn h3 + following paragraphs into
+    ('faq', (q, a)) accordion blocks so posts get the site's FAQ treatment
+    and an automatic FAQPage schema node."""
+    out, i, in_faq = [], 0, False
+    strip = lambda x: re.sub(r"<[^>]+>", "", x).strip()
+    while i < len(blocks):
+        b = blocks[i]
+        if b[0] == "h2":
+            head = strip(b[1]).lower()
+            in_faq = head.startswith("faq") or head.startswith("frequently")
+            out.append(b)
+            i += 1
+            continue
+        if in_faq and b[0] == "h3":
+            q, ans = strip(b[1]), []
+            i += 1
+            while i < len(blocks) and blocks[i][0] in ("p", "ul", "ol"):
+                bb = blocks[i]
+                if bb[0] == "p":
+                    ans.append(strip(bb[1]))
+                else:
+                    ans.append(" ".join(strip(x) for x in bb[1]))
+                i += 1
+            out.append(("faq", (q, " ".join(ans))))
+            continue
+        out.append(b)
+        i += 1
+    return out
+
+
+def load_posts():
+    posts = []
+    if not BLOG_DIR.exists():
+        return posts
+    for f in sorted(BLOG_DIR.glob("*.md")):
+        if f.stem.upper() in ("CONTENT-PLAN", "README"):
+            continue
+        meta, body = _fm_parse(f.read_text(encoding="utf-8"))
+        if not meta.get("title") or not meta.get("date"):
+            continue
+        body = scrub(body)
+        slug = meta.get("slug") or _slugify(meta["title"])
+        posts.append({
+            "slug": slug,
+            "path": f"/blog/{slug}/",
+            "title": scrub(meta["title"]),
+            "desc": scrub(meta.get("description", ""))[:158],
+            "date": meta["date"],
+            "updated": meta.get("updated", meta["date"]),
+            "keywords": meta.get("keywords", ""),
+            "blocks": _extract_faq(md_to_blocks(body)),
+            "words": len(re.sub(r"[^\w\s']", " ", body).split()),
+        })
+    posts.sort(key=lambda p: (p["date"], p["slug"]), reverse=True)
+    return posts
+
+
+def post_card(p):
+    mins = max(3, round(p["words"] / 200))
+    return (f'<a class="post-card" href="{p["path"]}">'
+            f'<p class="post-date">{fmt_date(p["date"])} &middot; {mins} min read</p>'
+            f'<h3>{H.escape(p["title"])}</h3>'
+            f'<p class="post-desc">{H.escape(p["desc"])}</p>'
+            f'<span class="post-more">Read the guide &rarr;</span></a>')
+
+
+def _post_toc(blocks):
+    hs = [b[1] for b in blocks if b[0] == "h2"]
+    if len(hs) < 4:
+        return ""
+    strip = lambda x: re.sub(r"<[^>]+>", "", x)
+    lis = "".join(f'<li><a href="#{_slugify(h)}">{strip(h)}</a></li>' for h in hs)
+    return f'<nav class="toc"><p>In this guide</p><ol>{lis}</ol></nav>'
+
+
+def _post_render(blocks, lang):
+    out = []
+    for b in blocks:
+        if b[0] == "h2":
+            out.append(f'<h2 id="{_slugify(b[1])}">{b[1]}</h2>')
+        else:
+            out.append(render_blocks([b], lang))
+    return "\n".join(x for x in out if x)
+
+
+def blog_post_html(post, posts):
+    mins = max(3, round(post["words"] / 200))
+    hero_style = (' style="background-image: linear-gradient(rgba(10,19,48,.82), '
+                  f'rgba(10,19,48,.94)), url(/assets/img/{webp_of(BLOG_HERO)})"')
+    others = [p for p in posts if p["slug"] != post["slug"]][:3]
+    related = ""
+    if others:
+        related = ('<section class="related"><h2>Keep reading</h2><div class="blog-grid">'
+                   + "".join(post_card(p) for p in others) + "</div></section>")
+    author = ('<div class="author-box"><p><strong>Written by Deril Mbarika</strong>, founder of DerilBTC, '
+              "Cameroon's WhatsApp crypto desk since 2018. Every guide comes from real trades the desk "
+              f'handles daily on MoMo, Orange Money and bank. <a href="{WA}" target="_blank" rel="noopener">'
+              "Message the desk</a> for a live quote.</p></div>")
+    url = f"{SITE}{post['path']}"
+    node = {
+        "@type": "BlogPosting", "@id": f"{url}#post",
+        "headline": post["title"], "description": post["desc"],
+        "datePublished": post["date"], "dateModified": post["updated"],
+        "wordCount": post["words"], "inLanguage": "en",
+        "author": {"@type": "Person", "name": "Deril Mbarika", "url": f"{SITE}/about/"},
+        "publisher": {"@id": f"{SITE}/#org"},
+        "mainEntityOfPage": url, "image": OG_IMAGE,
+    }
+    if post["keywords"]:
+        node["keywords"] = post["keywords"]
+    nodes = [node]
+    faq_pairs = [b[1] for b in post["blocks"] if b[0] == "faq"]
+    if faq_pairs:
+        nodes.append({"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq_pairs]})
+    body = f"""
+<main>
+  <section class="page-hero page-hero-img"{hero_style}>
+    <p class="post-kick"><a href="/blog/">DerilBTC Blog</a></p>
+    <h1>{H.escape(post['title'])}</h1>
+    <p class="post-meta">Published {fmt_date(post['date'])}
+      {('&middot; Updated ' + fmt_date(post['updated'])) if post['updated'] != post['date'] else ''}
+      &middot; {mins} min read &middot; by Deril Mbarika</p>
+  </section>
+  <article class="prose post-body" data-reveal>
+    {_post_toc(post['blocks'])}
+    {_post_render(post['blocks'], 'en')}
+    {author}
+  </article>
+  {related}
+</main>"""
+    return shell("en", f"{post['title']} | DerilBTC", post["desc"], post["path"], None,
+                 body, extra_schema=nodes, og_type="article",
+                 preload_img=f"/assets/img/{webp_of(BLOG_HERO)}")
+
+
+def blog_index_html(posts):
+    intro = ("Practical guides on Bitcoin, USDT, mobile money and cross-border payments in Cameroon, "
+             "written from the DerilBTC desk's daily trading experience since 2018.")
+    cards = "".join(post_card(p) for p in posts)
+    blog_node = [{
+        "@type": "Blog", "@id": f"{SITE}/blog/#blog", "name": "DerilBTC Blog",
+        "url": f"{SITE}/blog/", "description": intro, "inLanguage": "en",
+        "publisher": {"@id": f"{SITE}/#org"},
+        "blogPost": [{"@type": "BlogPosting", "headline": p["title"],
+                      "url": f"{SITE}{p['path']}", "datePublished": p["date"]}
+                     for p in posts[:20]],
+    }]
+    body = f"""
+<main>
+  <section class="page-hero">
+    <h1>Bitcoin &amp; money guides for Cameroon</h1>
+  </section>
+  <article class="prose blog-intro"><p>{intro}</p></article>
+  <section class="blog-wrap"><div class="blog-grid">{cards}</div></section>
+</main>"""
+    return shell("en", "Blog: Bitcoin & Money Guides for Cameroon | DerilBTC", intro[:158],
+                 "/blog/", None, body, extra_schema=blog_node)
+
+
 def write(path, content):
     p = DIST / path
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -1208,6 +1491,17 @@ def main():
         path = path_for(slug, page["lang"])
         paths.append(path)
         write(f"{path.lstrip('/')}index.html", page_html(slug, page, page["lang"])); n += 1
+    # blog: /blog/ index + one page per markdown post in content/blog/
+    posts = load_posts()
+    lastmods = {}
+    if posts:
+        write("blog/index.html", blog_index_html(posts)); n += 1
+        paths.append("/blog/")
+        lastmods["/blog/"] = max(p["updated"] for p in posts)
+        for p in posts:
+            write(f"blog/{p['slug']}/index.html", blog_post_html(p, posts)); n += 1
+            paths.append(p["path"])
+            lastmods[p["path"]] = p["updated"]
     write("404.html", shell("en", "Page not found | DerilBTC",
         "That page does not exist.", "/404.html", "/",
         '<main><section class="page-hero"><h1>Page not found.</h1></section>'
@@ -1216,7 +1510,11 @@ def main():
     for stub_path, target in REDIRECT_STUBS.items():
         write(stub_path, redirect_stub(target))
     # sitemap (production URLs; harmless in preview because preview is noindexed)
-    urls = "".join(f"<url><loc>https://derilbtc.com{p}</loc></url>" for p in sorted(paths))
+    urls = "".join(
+        "<url><loc>https://derilbtc.com" + p + "</loc>"
+        + (f"<lastmod>{lastmods[p]}</lastmod>" if p in lastmods else "")
+        + "</url>"
+        for p in sorted(paths))
     sitemap = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
     write("sitemap.xml", sitemap)
     # the WP-era path Google already has on file (Rank Math sitemap_index.xml)
