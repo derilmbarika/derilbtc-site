@@ -3,6 +3,7 @@ title: How to Sell Bitcoin in Cameroon and Get Paid to MoMo Fast
 description: How to sell bitcoin in Cameroon and get FCFA on MTN MoMo or Orange Money the same day. Real desk steps, the true fees, payout times and the traps to avoid.
 date: 2026-07-29
 slug: sell-bitcoin-cameroon-momo
+updated: 2026-07-30
 keywords: sell bitcoin cameroon, sell btc mobile money, cash out bitcoin cameroon
 ---
 
@@ -21,7 +22,7 @@ There are four ways people actually do it here, and they are not equal.
 | Street or market trader | Minutes, if he has cash | Widest spread we see, often 5 to 10 percent | No trace, no recourse at all | Whatever cash is in his bag |
 | Crypto app with a card | Days, sometimes never | Card issuance, FX markup, ATM fee | KYC rejection, card blocked | Small, capped by card limits |
 
-The OTC desk route wins for most people because it removes the two things that cost you money: negotiation and waiting. You get one number, you accept or you decline, and the payment leaves before you have finished your coffee. On P2P you match with a stranger who may take forty minutes to pay and then open a dispute. The street trader we quietly warn people away from: the spread is enormous, and because the trade leaves no record anywhere, nothing can be reconstructed if he disappears. The same four routes on the buying side are compared in our breakdown of the [five ways to buy bitcoin in Cameroon](/blog/how-to-buy-bitcoin-in-cameroon-2026/).
+The OTC desk route wins for most people because it removes the two things that cost you money: negotiation and waiting. You get one number, you accept or you decline, and the payment leaves before you have finished your coffee. On P2P you match with a stranger who may take forty minutes to pay and then open a dispute. The street trader we quietly warn people away from: the spread is enormous, and because the trade leaves no record anywhere, nothing can be reconstructed if he disappears. The same four routes on the buying side are compared in our breakdown of the [five ways to buy bitcoin in Cameroon](/blog/how-to-buy-bitcoin-in-cameroon-2026/). If P2P is the route you are leaning towards, read first what actually goes wrong with [Binance P2P in Cameroon](/blog/binance-p2p-cameroon-risks/), because selling is the side that carries almost all of the risk.
 
 Before you commit to anybody, check [today's rates](/rates/) so you know what a fair quote looks like in FCFA. A buyer offering well above the market is not being generous. He is buying your trust cheaply.
 
