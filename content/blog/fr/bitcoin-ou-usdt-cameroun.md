@@ -2,6 +2,7 @@
 title: Bitcoin ou USDT au Cameroun : Lequel Faut-il Garder ?
 description: Bitcoin ou USDT au Cameroun : lequel protège vos FCFA et lequel les fait grandir ? Chiffres réels de notre bureau, frais, risques et une règle simple.
 date: 2026-07-28
+updated: 2026-08-03
 slug: bitcoin-ou-usdt-cameroun
 en-slug: bitcoin-vs-usdt-cameroon
 keywords: bitcoin ou usdt, usdt cameroun, epargne stablecoin
@@ -57,7 +58,7 @@ Envoyer de l'USDT sur le réseau TRON (TRC20) coûte en général environ 1 USDT
 
 Les frais de transfert du bitcoin changent avec la congestion du réseau, et surtout le prix peut bouger pendant que la transaction se confirme. Sur un paiement fournisseur de 3 millions de FCFA, une variation de 2 pour cent pendant la confirmation représente 60 000 FCFA de discussion. Les stablecoins suppriment cette conversation.
 
-Un avertissement qui coûte de l'argent réel chaque semaine : le réseau compte plus que la pièce. De l'USDT envoyé sur le mauvais réseau, vers une adresse qui ne le supporte pas, est en général perdu. Confirmez TRC20 ou ERC20 avec le destinataire, par écrit, avant d'envoyer quoi que ce soit.
+Un avertissement qui coûte de l'argent réel chaque semaine : le réseau compte plus que la pièce. De l'USDT envoyé sur le mauvais réseau, vers une adresse qui ne le supporte pas, est en général perdu. Confirmez TRC20 ou ERC20 avec le destinataire, par écrit, avant d'envoyer quoi que ce soit. Nous détaillons la différence complète, les vrais frais et les options de récupération dans [USDT TRC20 ou ERC20](/fr/blog/usdt-trc20-ou-erc20/).
 
 ## Qu'est-ce qui peut mal tourner avec chacun ?
 
