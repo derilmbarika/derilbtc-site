@@ -2,6 +2,7 @@
 title: Trust Wallet au Cameroun : le guide de configuration pas à pas
 description: Guide simple de Trust Wallet au Cameroun : installer la vraie application, sauvegarder vos 12 mots, recevoir de l'USDT sur le bon réseau et éviter les fausses applis.
 date: 2026-08-02
+updated: 2026-08-03
 slug: configurer-trust-wallet-cameroun
 en-slug: trust-wallet-setup-cameroon
 keywords: trust wallet cameroun, créer un portefeuille crypto, recevoir usdt portefeuille
@@ -80,6 +81,10 @@ L'application elle-même est rarement le problème. Presque toutes les pertes do
 **La signature non lue.** Connecter son portefeuille à une dApp quelconque et approuver une transaction qui accorde une autorisation de dépense illimitée sur votre USDT. Si vous ne comprenez pas ce que vous approuvez, n'approuvez pas. Un débutant n'a aucune raison de se connecter à des dApps.
 
 Le schéma commun derrière ces quatre cas est social, pas technique, et c'est celui que nous avons décortiqué dans [les arnaques crypto sur WhatsApp au Cameroun](/fr/blog/arnaques-crypto-whatsapp-cameroun/). L'urgence, un inconnu serviable, et une demande qui ne colle pas tout à fait. Notre [guide de sécurité](/fr/securite/) en est la version checklist.
+
+**Mise à jour du 3 août 2026 : ce que le piratage Coldcard signifie pour votre portefeuille.** Depuis le vendredi 30 juillet, des attaquants vident le bitcoin des portefeuilles matériels Coldcard. Plus d'un millier d'adresses sont touchées et les estimations de pertes vont de 70 à 114 millions de dollars, [selon CoinDesk](https://www.coindesk.com/markets/2026/08/03/bitcoin-ether-decline-as-coldcard-exploit-enters-a-fifth-day). La cause est précise. Un bug du firmware datant de mars 2021 a fait que certains appareils Coldcard construisaient leur phrase de récupération avec un hasard logiciel prévisible au lieu du vrai hasard matériel. Ces mots pouvaient donc être reconstitués plus tard par un attaquant. C'est un défaut dans la façon dont une seule marque d'appareil créait les mots. Ce n'est pas la preuve qu'il est dangereux de garder ses propres clés. Les portefeuilles dont la phrase a été générée correctement, Trust Wallet sur votre téléphone compris, ne sont pas concernés par ce bug.
+
+Deux conséquences pour vous, et ce ne sont pas celles que les gros titres suggèrent. D'abord, ne paniquez pas en transférant tout vers une plateforme, ce qu'ont fait beaucoup de petits détenteurs la semaine dernière. Vous échangeriez un bug qui ne touche pas votre portefeuille contre le risque de blocage qui, lui, vous concerne vraiment. Ensuite, attendez-vous à la deuxième vague, car elle arrive toujours. Après chaque gros piratage, les messages commencent sur WhatsApp et Telegram : « contrôle de sécurité », « migrez votre portefeuille », « vérifiez votre phrase pour confirmer que vous êtes en sécurité ». Chacun de ces messages est le faux support décrit plus haut, habillé d'un titre d'actualité. Personne n'a jamais besoin de vos douze mots, pour aucune raison.
 
 ## Avez-vous encore besoin d'une plateforme si vous avez Trust Wallet ?
 

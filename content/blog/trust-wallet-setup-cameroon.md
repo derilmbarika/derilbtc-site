@@ -2,6 +2,7 @@
 title: Trust Wallet Setup in Cameroon: Step-by-Step for Beginners
 description: A plain guide to Trust Wallet in Cameroon: install it safely, back up your 12 words, receive USDT on the right network, and avoid the fake apps we see every week.
 date: 2026-08-02
+updated: 2026-08-03
 slug: trust-wallet-setup-cameroon
 keywords: trust wallet cameroon, crypto wallet setup, receive usdt wallet
 ---
@@ -79,6 +80,10 @@ The app itself is not usually the problem. Almost every loss we hear about on th
 **The signature you did not read.** Connecting your wallet to a random dApp and approving a transaction that grants unlimited spending permission on your USDT. If you do not understand what you are approving, do not approve it. Beginners have no reason to connect to dApps at all.
 
 The pattern behind all four is social, not technical, and it is the one we broke down in [WhatsApp crypto scams in Cameroon](/blog/whatsapp-crypto-scams-cameroon/). Urgency, a helpful stranger, and one request that does not quite make sense. Our [safety guide](/safety/) is the checklist version.
+
+**Update, 3 August 2026: what the Coldcard hack means for your wallet.** Since Friday 30 July, attackers have been draining bitcoin out of Coldcard hardware wallets. More than a thousand addresses have been hit and loss estimates run from 70 million to 114 million dollars, [reported by CoinDesk](https://www.coindesk.com/markets/2026/08/03/bitcoin-ether-decline-as-coldcard-exploit-enters-a-fifth-day). The cause is narrow. A firmware bug from March 2021 made some Coldcard devices build their recovery phrase using predictable software randomness instead of true hardware randomness, so those words could be worked out later by an attacker. That is a fault in how one brand of device created the words. It is not evidence that holding your own keys is broken. Wallets whose recovery phrase was generated properly, including Trust Wallet on your phone, are not affected by this bug.
+
+Two things follow for readers here, and neither is the one the headlines suggest. First, do not panic and move everything onto an exchange, which is what a lot of small holders did last week. You would be trading a bug that does not touch your wallet for the freeze risk that does. Second, expect the second wave, because it always comes. After every large hack the messages start on WhatsApp and Telegram: "security check", "migrate your wallet", "verify your seed to confirm you are safe". Every one of those is the support impostor described above, wearing a news headline. Nobody needs your twelve words, ever, for any reason.
 
 ## Do you still need an exchange if you have Trust Wallet?
 
