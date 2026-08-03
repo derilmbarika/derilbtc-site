@@ -89,7 +89,7 @@ Two things follow for readers here, and neither is the one the headlines suggest
 
 A wallet holds crypto. It does not turn FCFA into crypto by itself. The in app card options exist but rarely work smoothly with Cameroonian cards, and the rates are not competitive.
 
-So the normal setup here is two pieces. The wallet is where your coins live and where you receive payments. A desk is where FCFA becomes crypto and crypto becomes FCFA through MoMo or Orange Money. Most of our clients keep it exactly that way, holding in Trust Wallet and only involving a counterparty at the moment of converting. That is also the safest arrangement, because your balance never sits on someone else's platform waiting for a review. If you are still deciding where to buy, our guide to [buying bitcoin in Cameroon](/buy-bitcoin-cameroon/) compares the routes.
+So the normal setup here is two pieces. The wallet is where your coins live and where you receive payments. A desk is where FCFA becomes crypto and crypto becomes FCFA through MoMo or Orange Money. Most of our clients keep it exactly that way, holding in Trust Wallet and only involving a counterparty at the moment of converting. That is also the safest arrangement, because your balance never sits on someone else's platform waiting for a review. If you are still deciding where to buy, our guide to [buying bitcoin in Cameroon](/buy-bitcoin-cameroon/) compares the routes, and if you plan to pay by mobile money, [buying bitcoin with MTN MoMo](/buy-bitcoin-momo-cameroon/) walks that exact flow from wallet to transaction ID.
 
 ## FAQ
 

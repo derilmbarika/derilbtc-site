@@ -633,7 +633,8 @@ CARD_IMG = {
 # Full footer directory: every real page, grouped, per language.
 FOOTER = {
     "en": [
-        ("Trade", [("buy-bitcoin-cameroon", "Buy & sell Bitcoin"), ("buy-usdt-cameroon", "Buy & sell USDT"),
+        ("Trade", [("buy-bitcoin-cameroon", "Buy & sell Bitcoin"), ("buy-bitcoin-momo-cameroon", "Buy Bitcoin with MoMo"),
+                    ("buy-usdt-cameroon", "Buy & sell USDT"),
                     ("naira-to-cfa-cameroon", "Naira to FCFA"), ("sell-gift-cards-cameroon", "Sell gift cards"),
                     ("rates", "Today's rates")]),
         ("Payments & travel", [("pay-china-suppliers", "Pay China suppliers"), ("pay-school-fees-abroad", "School fees abroad"),
@@ -643,7 +644,8 @@ FOOTER = {
         ("DerilBTC", [("about", "About us"), ("refer", "Refer & earn")]),
     ],
     "fr": [
-        ("Trader", [("acheter-bitcoin-cameroun", "Acheter du Bitcoin"), ("acheter-usdt-cameroun", "Acheter de l'USDT"),
+        ("Trader", [("acheter-bitcoin-cameroun", "Acheter du Bitcoin"), ("acheter-bitcoin-momo-cameroun", "Bitcoin par MoMo"),
+                     ("acheter-usdt-cameroun", "Acheter de l'USDT"),
                      ("naira-en-fcfa-cameroun", "Naira en FCFA"), ("vendre-cartes-cadeaux-cameroun", "Vendre des cartes-cadeaux"),
                      ("taux", "Taux du jour")]),
         ("Paiements & voyage", [("payer-fournisseur-chine", "Payer un fournisseur en Chine"), ("frais-de-scolarite-etranger", "Frais de scolarité"),
@@ -708,7 +710,7 @@ HOME_COPY = {
         "steps_h": "Three steps. No app, no account.",
         "steps": [("Message us", "Say what you want to trade on WhatsApp."),
                    ("Lock your rate", "We quote a fair public rate and confirm."),
-                   ("Get paid", "MoMo, Orange Money or bank, usually in minutes.")],
+                   ("Get paid", 'MoMo, Orange Money or bank, usually in minutes. First time? See <a href="/buy-bitcoin-momo-cameroon/">how to buy Bitcoin with MTN MoMo</a>.')],
         "explore": "Explore services ↓",
         "cta_h": "Ready to move your money the smart way?",
         "cta_btn": "Trade on WhatsApp",
@@ -726,7 +728,7 @@ HOME_COPY = {
         "steps_h": "Trois étapes. Sans application, sans compte.",
         "steps": [("Écrivez-nous", "Dites ce que vous voulez trader sur WhatsApp."),
                    ("Bloquez votre taux", "Nous cotons un taux public équitable et confirmons."),
-                   ("Recevez l'argent", "MoMo, Orange Money ou banque, souvent en quelques minutes.")],
+                   ("Recevez l'argent", 'MoMo, Orange Money ou banque, souvent en quelques minutes. Première fois ? Voir <a href="/fr/acheter-bitcoin-momo-cameroun/">comment acheter du Bitcoin avec MTN MoMo</a>.')],
         "explore": "Découvrir les services ↓",
         "cta_h": "Prêt à déplacer votre argent intelligemment ?",
         "cta_btn": "Trader sur WhatsApp",

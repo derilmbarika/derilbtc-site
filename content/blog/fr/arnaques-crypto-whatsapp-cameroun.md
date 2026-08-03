@@ -2,6 +2,7 @@
 title: Arnaques crypto WhatsApp au Cameroun : repérer un faux trader
 description: Les arnaques crypto sur WhatsApp au Cameroun suivent toujours les mêmes scripts. Les signaux d'alerte, comment vérifier un vrai vendeur de bitcoin, et quoi faire si vous avez payé.
 date: 2026-07-31
+updated: 2026-08-03
 slug: arnaques-crypto-whatsapp-cameroun
 en-slug: whatsapp-crypto-scams-cameroon
 keywords: arnaques crypto whatsapp, faux trader crypto, verifier vendeur bitcoin
@@ -81,7 +82,7 @@ Agissez dans la première heure. Les chances de récupération chutent vite, mai
 5. Prévenez votre entourage, clairement. Ces numéros travaillent par les groupes, et un message honnête évite plusieurs autres pertes.
 6. Refusez tous les "agents de récupération" qui apparaissent ensuite. Ils surveillent les signalements et visent les mêmes personnes une deuxième fois. Aucun service au monde n'annule une transaction blockchain.
 
-Ensuite, reconstruisez l'habitude qui a lâché. La plupart des gens qui perdent de l'argent sur WhatsApp ne manquent pas d'intelligence. Ils ont sauté une vérification parce que la personne semblait sympathique et que le moment semblait urgent. Si vous voulez la version sûre de la même opération, notre pas à pas sur [comment vendre du bitcoin et être payé sur MoMo](/fr/blog/vendre-bitcoin-cameroun-momo/) et notre guide principal pour [acheter du bitcoin au Cameroun](/fr/acheter-bitcoin-cameroun/) suivent tous deux la séquence d'un vrai bureau : vérifier, puis une petite première transaction, puis le volume.
+Ensuite, reconstruisez l'habitude qui a lâché. La plupart des gens qui perdent de l'argent sur WhatsApp ne manquent pas d'intelligence. Ils ont sauté une vérification parce que la personne semblait sympathique et que le moment semblait urgent. Si vous voulez la version sûre de la même opération, notre pas à pas sur [comment vendre du bitcoin et être payé sur MoMo](/fr/blog/vendre-bitcoin-cameroun-momo/) et notre guide principal pour [acheter du bitcoin au Cameroun](/fr/acheter-bitcoin-cameroun/) suivent tous deux la séquence d'un vrai bureau : vérifier, puis une petite première transaction, puis le volume. Pour le côté achat par mobile money précisément, la séquence sûre est détaillée dans [comment acheter du bitcoin avec MTN MoMo](/fr/acheter-bitcoin-momo-cameroun/).
 
 ## Questions fréquentes
 

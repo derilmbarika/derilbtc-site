@@ -47,7 +47,7 @@ Here is the honest picture as of 28 July 2026. Bitcoin is trading around 64,700 
 
 What works for our clients is boring: a fixed amount every month, 25,000 or 50,000 FCFA, bought on the same day whatever the price, held for years. It removes the timing decision entirely. What does not work is putting one large lump sum in after reading that bitcoin is going up, which is always the moment it stops.
 
-If you are new to this, read our comparison of [the 5 ways to buy bitcoin in Cameroon](/blog/how-to-buy-bitcoin-in-cameroon-2026/) first, because the route you choose costs you more than a week of price movement does.
+If you are new to this, read our comparison of [the 5 ways to buy bitcoin in Cameroon](/blog/how-to-buy-bitcoin-in-cameroon-2026/) first, because the route you choose costs you more than a week of price movement does. And if you already know you will pay by mobile money, the step by step on [buying bitcoin with MTN MoMo](/buy-bitcoin-momo-cameroon/) is the fastest way in.
 
 ## Which is cheaper to send and pay with?
 

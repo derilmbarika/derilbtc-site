@@ -2,6 +2,7 @@
 title: WhatsApp Crypto Scams in Cameroon: How to Spot a Fake Trader
 description: WhatsApp crypto scams in Cameroon run on a few tired scripts. The red flags, the checks that verify a real bitcoin seller, and what to do if you already paid.
 date: 2026-07-31
+updated: 2026-08-03
 slug: whatsapp-crypto-scams-cameroon
 keywords: crypto scams whatsapp, fake crypto trader, verify bitcoin seller
 ---
@@ -80,7 +81,7 @@ Move in the first hour. Recovery odds fall fast, but they are not zero if the fu
 5. Warn your circle, plainly. These numbers work through groups, and one honest message stops several more losses.
 6. Refuse every "recovery agent" who appears afterwards. They watch scam reports and target people twice. There is no service that reverses blockchain transactions, ever.
 
-Then rebuild the habit that failed. Most people who lose money on WhatsApp did not lack intelligence. They skipped one check because the person seemed nice and the moment felt urgent. If you want the safe version of the same trade, our step by step on [how to sell bitcoin and get paid to MoMo](/blog/sell-bitcoin-cameroon-momo/) and our main guide to [buying bitcoin in Cameroon](/buy-bitcoin-cameroon/) both use the sequence a desk actually follows: verify, then a small first trade, then size.
+Then rebuild the habit that failed. Most people who lose money on WhatsApp did not lack intelligence. They skipped one check because the person seemed nice and the moment felt urgent. If you want the safe version of the same trade, our step by step on [how to sell bitcoin and get paid to MoMo](/blog/sell-bitcoin-cameroon-momo/) and our main guide to [buying bitcoin in Cameroon](/buy-bitcoin-cameroon/) both use the sequence a desk actually follows: verify, then a small first trade, then size. For the buying side with mobile money specifically, the safe sequence is laid out in [how to buy bitcoin with MTN MoMo](/buy-bitcoin-momo-cameroon/).
 
 ## FAQ
 

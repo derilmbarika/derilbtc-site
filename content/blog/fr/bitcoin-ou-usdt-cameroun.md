@@ -48,7 +48,7 @@ Voici l'image honnête au 28 juillet 2026. Le bitcoin s'échange autour de 64 70
 
 Ce qui marche chez nos clients est ennuyeux : un montant fixe chaque mois, 25 000 ou 50 000 FCFA, acheté le même jour quel que soit le prix, gardé pendant des années. Cela supprime totalement la décision de timing. Ce qui ne marche pas, c'est de placer une grosse somme d'un coup après avoir lu que le bitcoin monte, ce qui est toujours le moment où il s'arrête.
 
-Si vous débutez, lisez d'abord notre comparatif des [5 façons d'acheter du bitcoin au Cameroun](/fr/blog/comment-acheter-bitcoin-cameroun-2026/), car la méthode choisie vous coûte plus cher qu'une semaine de variation de prix.
+Si vous débutez, lisez d'abord notre comparatif des [5 façons d'acheter du bitcoin au Cameroun](/fr/blog/comment-acheter-bitcoin-cameroun-2026/), car la méthode choisie vous coûte plus cher qu'une semaine de variation de prix. Et si vous savez déjà que vous paierez par mobile money, le pas à pas pour [acheter du bitcoin avec MTN MoMo](/fr/acheter-bitcoin-momo-cameroun/) est la voie la plus rapide.
 
 ## Lequel est le moins cher à envoyer et à payer ?
 
