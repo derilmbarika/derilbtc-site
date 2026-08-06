@@ -2,7 +2,7 @@
 title: How to Buy Bitcoin in Cameroon in 2026: 5 Ways Compared
 description: How to buy bitcoin in Cameroon in 2026: OTC desks, P2P, exchanges, agents and vouchers compared on speed, fees and safety, from a desk trading daily.
 date: 2026-07-26
-updated: 2026-07-27
+updated: 2026-08-06
 slug: how-to-buy-bitcoin-in-cameroon-2026
 keywords: how to buy bitcoin in cameroon, best way to buy bitcoin cameroon, buy bitcoin momo
 ---
@@ -55,7 +55,7 @@ Where exchanges genuinely shine is as a research and price-reference layer. Site
 
 ## What about street agents and voucher swaps?
 
-Cash agents exist in Douala and Yaounde, often working from phone shops or forex corners. Some are honest. The structural problem is that nothing about the trade is verifiable: no fixed identity, no trade history, no recourse. The spreads we hear from clients who used agents are consistently the widest in the market, and disputes end with nobody to call.
+Cash agents exist in Douala and Yaounde, often working from phone shops or forex corners. Some are honest. The structural problem is that nothing about the trade is verifiable: no fixed identity, no trade history, no recourse. The spreads we hear from clients who used agents are consistently the widest in the market, and disputes end with nobody to call. Our breakdown of [where traders actually buy bitcoin in Douala](/blog/buy-bitcoin-douala/) shows how much wider those counter prices run in practice, and why meeting anyone in person with cash is the riskiest version of this trade.
 
 Voucher routes (buying a gift card or prepaid voucher, then swapping it for bitcoin) stack two conversions on top of each other, and you lose margin on both. If you already hold gift cards, [selling them directly for FCFA](/sell-gift-cards-cameroon/) almost always beats converting them into crypto first.
 
